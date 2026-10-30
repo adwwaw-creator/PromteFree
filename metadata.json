@@ -1,0 +1,8 @@
+{
+  "name": "Gemini",
+  "description": "Gemini - Assistant d'IA conversationnel et créatif de Google",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

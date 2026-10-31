@@ -5,6 +5,7 @@ import { GeminiBottomSheet } from './components/GeminiBottomSheet';
 import { GeminiSidebar } from './components/GeminiSidebar';
 import { PromptLibraryModal } from './components/PromptLibraryModal';
 import { PromptRulesModal } from './components/PromptRulesModal';
+import { StyleTransferModal } from './components/StyleTransferModal';
 import {
   TargetModel,
   ChatMessage,
@@ -41,6 +42,7 @@ export default function App() {
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [isStyleTransferOpen, setIsStyleTransferOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   // User Session Management
@@ -184,6 +186,63 @@ export default function App() {
     }, 450);
   };
 
+  const handleInjectStyleTransferPrompt = (
+    promptText: string,
+    title: string,
+    explanation: string
+  ) => {
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: `🔄 [الهندسة العكسية لنقل النمط]: ${title}`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    const promptData = ArabiPromptEngine.generate(title, {
+      category: 'image',
+      language: outputLanguage,
+      model: currentModel,
+      detail: detailLevel,
+      delivery: deliveryMode,
+      tone,
+      brand: true,
+    });
+
+    promptData.title = title;
+    promptData.prompt = promptText;
+    promptData.promptCode = promptText;
+    promptData.executionResult = explanation;
+    promptData.assumptions = [
+      'تم تفكيك لوحة الألوان والإضاءة والملمس والوسيط الفني من الصورة 1 بنجاح',
+      'تم تطبيق النمط بالكامل على موضوع وتكوين الصورة 2',
+      'يدعم Midjourney v6 (--sref) و FLUX.1 و DALL-E 3 و Imagen 3',
+    ];
+
+    const modelMsg: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      role: 'model',
+      content: '',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      model: currentModel,
+      promptData,
+    };
+
+    setMessages((prev) => [...prev, userMsg, modelMsg]);
+
+    const newSession: SavedSession = {
+      id: Date.now().toString(),
+      title: title.slice(0, 48),
+      messages: [{ idea: `🔄 [نقل النمط]: ${title}`, prompt: promptText }],
+    };
+    saveSessionsToStorage([newSession, ...sessions.filter((s) => s.title !== newSession.title)]);
+
+    showToast(
+      lang === 'ar'
+        ? 'تمت إضافة برومبت نقل النمط المعكوس إلى المحادثة بنجاح! 🎨'
+        : 'Style transfer prompt added to chat! 🎨'
+    );
+  };
+
   const handleSelectCategoryFromDrawer = (cat: PromptCategory, sampleText?: string) => {
     setSelectedCategory(cat);
     if (sampleText) {
@@ -272,6 +331,7 @@ export default function App() {
           setDeliveryMode={setDeliveryMode}
           tone={tone}
           setTone={setTone}
+          onOpenStyleTransfer={() => setIsStyleTransferOpen(true)}
         />
       </main>
 
@@ -287,6 +347,7 @@ export default function App() {
         setDeliveryMode={setDeliveryMode}
         tone={tone}
         setTone={setTone}
+        onOpenStyleTransfer={() => setIsStyleTransferOpen(true)}
       />
 
       {/* Sidebar Drawer matching Gemini official UI */}
@@ -325,6 +386,14 @@ export default function App() {
           handleGeneratePrompt(template, selectedCategory, outputLanguage, executionType);
         }}
         lang={lang}
+      />
+
+      {/* Free Reverse Engineering Style Transfer Modal (صورة ➜ صورة) */}
+      <StyleTransferModal
+        isOpen={isStyleTransferOpen}
+        onClose={() => setIsStyleTransferOpen(false)}
+        lang={lang}
+        onInjectPromptIntoChat={handleInjectStyleTransferPrompt}
       />
 
       {/* Global Floating Action Feedback Toast */}

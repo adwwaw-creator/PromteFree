@@ -29,6 +29,7 @@ interface GeminiHomeViewProps {
   setDeliveryMode?: (m: DeliveryMode) => void;
   tone?: string;
   setTone?: (t: string) => void;
+  onOpenStyleTransfer?: () => void;
 }
 
 export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
@@ -52,6 +53,7 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
   setDeliveryMode,
   tone = 'رسمي واحترافي',
   setTone,
+  onOpenStyleTransfer,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -419,6 +421,29 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
               </div>
               <div className="w-10 h-10 rounded-xl bg-amber-600/20 text-amber-300 border border-amber-500/30 flex items-center justify-center shrink-0">
                 <Scale className="w-5 h-5" />
+              </div>
+            </div>
+
+            {/* Top Banner 3: الهندسة العكسية لنقل الأنماط (صورة ➜ صورة) مجاني */}
+            <div
+              onClick={onOpenStyleTransfer}
+              className="w-full p-4 rounded-2xl bg-gradient-to-r from-[#2a133d] via-[#1f1a38] to-[#132238] border border-[#5d3185] flex items-center justify-between cursor-pointer hover:border-[#8545bf] transition-all shadow-lg active:scale-98 group"
+            >
+              <div className="flex flex-col text-start">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-white flex items-center gap-1.5">
+                    🔄 الهندسة العكسية لنقل الأنماط
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    مجاني
+                  </span>
+                </div>
+                <span className="text-xs text-purple-200/70 mt-1">
+                  ارفع صورة النمط وصورة الهدف ➜ برومت ينقل النمط من هذه للأخرى
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5 text-amber-300" />
               </div>
             </div>
 
@@ -1127,6 +1152,22 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
               Tâche
             </button>
           </div>
+
+          {/* Free Style Transfer Reverse Engineering Pill */}
+          {onOpenStyleTransfer && (
+            <button
+              type="button"
+              onClick={onOpenStyleTransfer}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-900/50 via-amber-900/40 to-blue-900/50 hover:from-purple-800/70 hover:to-blue-800/70 border border-purple-500/40 hover:border-purple-400 text-[11px] text-purple-200 hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
+              title={lang === 'ar' ? 'الهندسة العكسية لنقل الأنماط (صورة ➜ صورة)' : 'Reverse Engineering Style Transfer'}
+            >
+              <span className="text-xs">🔄</span>
+              <span className="font-medium">{lang === 'ar' ? 'نقل النمط' : 'Transfert Style'}</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">
+                {lang === 'ar' ? 'مجاني' : 'Free'}
+              </span>
+            </button>
+          )}
 
           {/* Quick ArabiPrompt Settings Trigger Pill */}
           <button

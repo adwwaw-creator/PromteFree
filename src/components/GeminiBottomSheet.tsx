@@ -15,6 +15,7 @@ interface GeminiBottomSheetProps {
   setDeliveryMode?: (m: DeliveryMode) => void;
   tone?: string;
   setTone?: (t: string) => void;
+  onOpenStyleTransfer?: () => void;
 }
 
 export const GeminiBottomSheet: React.FC<GeminiBottomSheetProps> = ({
@@ -28,6 +29,7 @@ export const GeminiBottomSheet: React.FC<GeminiBottomSheetProps> = ({
   setDeliveryMode,
   tone = 'رسمي واحترافي',
   setTone,
+  onOpenStyleTransfer,
 }) => {
   if (!isOpen) return null;
 
@@ -102,6 +104,42 @@ export const GeminiBottomSheet: React.FC<GeminiBottomSheetProps> = ({
             {lang === 'ar' ? 'اختر مجالك لتخصيص القواعد' : 'Sélectionnez un domaine'}
           </span>
         </div>
+
+        {/* Style Transfer Reverse Engineering Feature Banner */}
+        {onOpenStyleTransfer && (
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenStyleTransfer();
+            }}
+            className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-amber-900/30 via-purple-900/30 to-blue-900/30 border border-amber-500/40 hover:border-amber-400 text-start flex items-center justify-between group transition-all shadow-md active:scale-98 cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
+                🔄
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-white group-hover:text-amber-200">
+                    {lang === 'ar' ? 'الهندسة العكسية لنقل الأنماط (صورة ➜ صورة)' : 'Reverse Engineering Style Transfer'}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                    {lang === 'ar' ? 'مجاني' : 'Free'}
+                  </span>
+                </div>
+                <span className="text-xs text-slate-400 mt-0.5">
+                  {lang === 'ar'
+                    ? 'ارفع صورة النمط وصورة الهدف لتوليد برومت ينقل النمط من الأولى للثانية'
+                    : 'Extract style from Image 1 and project it onto Image 2'}
+                </span>
+              </div>
+            </div>
+            <span className="text-xs text-amber-400 font-bold px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              {lang === 'ar' ? 'فتح' : 'Open'}
+            </span>
+          </button>
+        )}
 
         {/* Circular Action Buttons Row */}
         <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar px-1">

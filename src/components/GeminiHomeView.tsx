@@ -278,12 +278,61 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
     }
   };
 
+  // Global Keyboard Shortcuts: Cmd/Ctrl + K to focus input area, Escape to clear prompt
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K (Mac) or Ctrl+K (Windows/Linux): Quickly focus on the input area
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.select();
+        }
+        showToast(
+          lang === 'ar'
+            ? 'تم التركيز على خانة الكتابة (Ctrl + K) ⚡'
+            : 'Focus sur la zone de texte (Ctrl + K) ⚡'
+        );
+        return;
+      }
+
+      // Escape key or Cmd/Ctrl + Shift + K: Quickly clear prompt if active or contains text
+      if (
+        (e.key === 'Escape' && (document.activeElement === textareaRef.current || inputValue)) ||
+        ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key.toLowerCase() === 'k' || e.key.toLowerCase() === 'x'))
+      ) {
+        if (inputValue) {
+          e.preventDefault();
+          setInputValue('');
+          baseInputRef.current = '';
+          if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.focus();
+          }
+          showToast(lang === 'ar' ? 'تم مسح نص الفكرة (Esc) 🧹' : 'Prompt effacé (Esc) 🧹');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [inputValue, lang]);
+
   // Disable form submission on Enter: allows Enter to only insert a new line (\n)
   // Making the dedicated Send button the sole way to send the message
+  // And allow Escape to quickly clear the prompt
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       // Allow native textarea newline insertion (\n) without submitting form
       e.stopPropagation();
+    } else if (e.key === 'Escape' && inputValue) {
+      e.preventDefault();
+      setInputValue('');
+      baseInputRef.current = '';
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+      showToast(lang === 'ar' ? 'تم مسح نص الفكرة (Esc) 🧹' : 'Prompt effacé (Esc) 🧹');
     }
   };
 
@@ -1178,7 +1227,7 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
           </button>
 
           {/* Multiline auto-expanding textarea for User's Idea */}
-          <div className="flex-1 min-w-0 flex items-center py-0.5">
+          <div className="flex-1 min-w-0 flex items-center gap-1 py-0.5 relative">
             <textarea
               ref={textareaRef}
               rows={1}
@@ -1189,13 +1238,46 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
               placeholder={
                 isListening
                   ? (lang === 'ar' ? '🎙️ جارٍ الاستماع... تكلّم الآن...' : '🎙️ Écoute en cours...')
-                  : (lang === 'ar' ? 'اكتب فكرتك هنا...' : 'Demandez ...')
+                  : (lang === 'ar' ? 'اكتب فكرتك هنا... (Ctrl+K للتركيز)' : 'Demandez ... (Ctrl+K)')
               }
               className={`w-full bg-transparent text-sm sm:text-base text-white placeholder-slate-400 focus:outline-none px-1.5 sm:px-2 py-1 transition-colors resize-none overflow-y-auto leading-relaxed max-h-[180px] ${
                 isListening ? 'placeholder-red-400 font-medium' : ''
               }`}
               style={{ minHeight: '26px' }}
             />
+
+            {/* Desktop Keyboard Shortcut Badge (Cmd/Ctrl + K) */}
+            {!inputValue && !isListening && (
+              <div
+                onClick={() => textareaRef.current?.focus()}
+                className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[#282a2c]/60 hover:bg-[#333538] border border-[#3c4043] text-[10px] text-slate-400 font-mono select-none cursor-pointer shrink-0 transition-colors"
+                title={lang === 'ar' ? 'اختصار لوحة المفاتيح: Ctrl + K للتركيز' : 'Raccourci: Ctrl + K'}
+              >
+                <span>⌘</span>
+                <span>K</span>
+              </div>
+            )}
+
+            {/* Quick Clear Button (or press Escape) */}
+            {inputValue && !isListening && (
+              <button
+                type="button"
+                onClick={() => {
+                  setInputValue('');
+                  baseInputRef.current = '';
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = 'auto';
+                    textareaRef.current.focus();
+                  }
+                  showToast(lang === 'ar' ? 'تم مسح نص الفكرة (Esc)' : 'Prompt effacé (Esc)');
+                }}
+                className="w-6 h-6 rounded-full hover:bg-[#282a2c] text-slate-400 hover:text-white flex items-center justify-center transition-colors shrink-0 cursor-pointer self-center"
+                title={lang === 'ar' ? 'مسح النص سريعاً (Esc)' : 'Effacer le texte (Esc)'}
+                aria-label="Clear prompt"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {/* Voice Dictation (Web Speech API) Button */}

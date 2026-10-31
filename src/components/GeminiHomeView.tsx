@@ -151,11 +151,33 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
     }, 3200);
   };
 
-  const handleCopyText = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    showToast(lang === 'ar' ? 'تم نسخ البرومبت إلى الحافظة! 📋' : 'Prompt copié dans le presse-papier !');
-    setTimeout(() => setCopiedId(null), 2500);
+  const handleCopyText = async (text: string, id: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopiedId(id);
+      showToast(
+        lang === 'ar'
+          ? 'تم النسخ إلى الحافظة بنجاح! 📋'
+          : lang === 'fr'
+          ? 'Copié dans le presse-papier ! 📋'
+          : 'Copied to Clipboard! 📋'
+      );
+      setTimeout(() => setCopiedId(null), 2500);
+    } catch {
+      showToast(lang === 'ar' ? 'تعذر النسخ إلى الحافظة' : 'Failed to copy to clipboard');
+    }
   };
 
   const handleSharePrompt = async (promptText: string, promptTitle?: string, id?: string) => {
@@ -256,10 +278,12 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
     }
   };
 
+  // Disable form submission on Enter: allows Enter to only insert a new line (\n)
+  // Making the dedicated Send button the sole way to send the message
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleFormSubmit(e as unknown as React.FormEvent);
+    if (e.key === 'Enter') {
+      // Allow native textarea newline insertion (\n) without submitting form
+      e.stopPropagation();
     }
   };
 
@@ -547,17 +571,19 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                             <div className="flex items-center gap-2 shrink-0">
                               <button
                                 onClick={() => handleCopyText(msg.promptData!.promptCode, msg.id)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#1b6ef3] hover:bg-[#1860d5] text-white font-semibold text-xs sm:text-sm shadow-md transition-all active:scale-95"
+                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#1b6ef3] hover:bg-[#1860d5] text-white font-semibold text-xs sm:text-sm shadow-md transition-all active:scale-95 cursor-pointer"
+                                title="Copy to Clipboard"
+                                aria-label="Copy to Clipboard"
                               >
                                 {copiedId === msg.id ? (
                                   <>
                                     <Check className="w-4 h-4 text-emerald-300" />
-                                    <span>{lang === 'ar' ? 'تم نسخ البرومبت!' : 'Prompt copié !'}</span>
+                                    <span>{lang === 'ar' ? 'تم النسخ إلى الحافظة!' : lang === 'fr' ? 'Copié !' : 'Copied to Clipboard!'}</span>
                                   </>
                                 ) : (
                                   <>
                                     <Copy className="w-4 h-4" />
-                                    <span>{lang === 'ar' ? 'نسخ البرومبت' : 'Copier le prompt'}</span>
+                                    <span>{lang === 'ar' ? 'نسخ إلى الحافظة' : lang === 'fr' ? 'Copier' : 'Copy to Clipboard'}</span>
                                   </>
                                 )}
                               </button>
@@ -800,23 +826,24 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                         <div className="rounded-3xl bg-[#1e1f20] border border-[#2d2f31] p-4 sm:p-6 shadow-xl leading-relaxed text-sm sm:text-base text-slate-200 whitespace-pre-wrap relative">
                           <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#2d2f31]">
                             <span className="text-xs text-slate-400 font-medium">
-                              {lang === 'ar' ? 'إجابة النموذج' : 'Réponse'}
+                              {lang === 'ar' ? 'إجابة النموذج' : lang === 'fr' ? 'Réponse' : 'AI Response'}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleCopyText(msg.content, msg.id)}
                               className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#282a2c] hover:bg-[#333538] text-slate-200 hover:text-white text-xs font-medium transition-all active:scale-95 cursor-pointer shadow-sm"
-                              title={lang === 'ar' ? 'نسخ الإجابة' : 'Copier'}
+                              title="Copy to Clipboard"
+                              aria-label="Copy to Clipboard"
                             >
                               {copiedId === msg.id ? (
                                 <>
                                   <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                  <span className="text-emerald-400 font-semibold">{lang === 'ar' ? 'تم النسخ!' : 'Copié !'}</span>
+                                  <span className="text-emerald-400 font-semibold">{lang === 'ar' ? 'تم النسخ!' : lang === 'fr' ? 'Copié !' : 'Copied!'}</span>
                                 </>
                               ) : (
                                 <>
                                   <Copy className="w-3.5 h-3.5 text-blue-400" />
-                                  <span>{lang === 'ar' ? 'نسخ' : 'Copier'}</span>
+                                  <span>{lang === 'ar' ? 'نسخ إلى الحافظة' : lang === 'fr' ? 'Copier' : 'Copy to Clipboard'}</span>
                                 </>
                               )}
                             </button>
@@ -827,20 +854,23 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
 
                       {/* Gemini Bottom Interaction Icons */}
                       <div className="flex items-center gap-1.5 text-slate-400 px-1 pt-1 flex-wrap">
+                        {/* Copy to Clipboard button on every AI generated response */}
                         <button
+                          type="button"
                           onClick={() => handleCopyText(msg.promptData?.promptCode || msg.content, msg.id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#282a2c]/80 hover:bg-[#282a2c] text-slate-300 hover:text-white text-xs transition-colors active:scale-95 border border-[#383a3c]/60 shadow-sm cursor-pointer"
-                          title={lang === 'ar' ? 'نسخ النص للحافظة' : 'Copier dans le presse-papier'}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#282a2c]/80 hover:bg-[#282a2c] text-slate-200 hover:text-white text-xs transition-colors active:scale-95 border border-[#383a3c]/60 shadow-sm cursor-pointer"
+                          title="Copy to Clipboard"
+                          aria-label="Copy to Clipboard"
                         >
                           {copiedId === msg.id ? (
                             <>
                               <Check className="w-3.5 h-3.5 text-emerald-400" />
-                              <span className="text-emerald-400 font-medium">{lang === 'ar' ? 'تم النسخ!' : 'Copié !'}</span>
+                              <span className="text-emerald-400 font-medium">{lang === 'ar' ? 'تم النسخ إلى الحافظة!' : lang === 'fr' ? 'Copié dans le presse-papier !' : 'Copied to Clipboard!'}</span>
                             </>
                           ) : (
                             <>
-                              <Copy className="w-3.5 h-3.5 text-blue-400" />
-                              <span className="font-medium">{lang === 'ar' ? 'نسخ' : 'Copier'}</span>
+                              <Copy className="w-3.5 h-3.5 text-[#7cacf8]" />
+                              <span className="font-medium">{lang === 'ar' ? 'نسخ إلى الحافظة' : lang === 'fr' ? 'Copier dans le presse-papier' : 'Copy to Clipboard'}</span>
                             </>
                           )}
                         </button>
@@ -1191,12 +1221,13 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
             )}
           </button>
 
-          {/* Enter / Submit Button - ALWAYS VISIBLE ("زر الإدخال") */}
+          {/* Dedicated Send Button - The exclusive way to submit the prompt */}
           <button
             type="submit"
             disabled={isLoading}
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#1b6ef3] hover:bg-[#1860d5] active:scale-95 text-white flex items-center justify-center transition-all shrink-0 shadow-lg cursor-pointer disabled:opacity-50 mb-0.5"
-            title={lang === 'ar' ? 'زر الإدخال / توليد البرومبت' : 'Bouton d\'envoi'}
+            title={lang === 'ar' ? 'زر الإرسال / توليد البرومبت' : 'Bouton d\'envoi'}
+            aria-label={lang === 'ar' ? 'إرسال الفكرة' : 'Envoyer'}
           >
             <Send className="w-4 h-4 translate-x-[-0.5px] text-white" />
           </button>

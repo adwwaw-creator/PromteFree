@@ -59,20 +59,46 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
   const [activeTab, setActiveTab] = useState<'chat' | 'task'>('chat');
   const [showAllLaunchers, setShowAllLaunchers] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize the input textarea dynamically to fit the written sentence
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      // Allow dynamic expansion from 28px up to 180px so long sentences wrap and remain fully visible
+      const computedHeight = Math.min(Math.max(scrollHeight, 28), 180);
+      textareaRef.current.style.height = `${computedHeight}px`;
+    }
+  }, [inputValue]);
 
   // Voice-to-Text via Web Speech API
   const [voiceLang, setVoiceLang] = useState<string>(
-    lang === 'ar' ? 'ar-SA' : lang === 'fr' ? 'fr-FR' : 'en-US'
+    outputLanguage === 'darija'
+      ? 'ar-MA'
+      : outputLanguage === 'ar' || lang === 'ar'
+      ? 'ar-SA'
+      : outputLanguage === 'fr' || lang === 'fr'
+      ? 'fr-FR'
+      : 'en-US'
   );
   const baseInputRef = useRef('');
 
   useEffect(() => {
-    setVoiceLang(lang === 'ar' ? 'ar-SA' : lang === 'fr' ? 'fr-FR' : 'en-US');
-  }, [lang]);
+    const target =
+      outputLanguage === 'darija'
+        ? 'ar-MA'
+        : outputLanguage === 'ar' || lang === 'ar'
+        ? 'ar-SA'
+        : outputLanguage === 'fr' || lang === 'fr'
+        ? 'fr-FR'
+        : 'en-US';
+    setVoiceLang(target);
+  }, [lang, outputLanguage]);
 
   const {
     isListening,
+    interimText,
     errorMessage,
     clearError,
     isSupported,
@@ -84,8 +110,8 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
       const base = baseInputRef.current.trim();
       const updated = base ? `${base} ${spokenText.trim()}` : spokenText.trim();
       setInputValue(updated);
-      if (inputRef.current) {
-        inputRef.current.scrollLeft = inputRef.current.scrollWidth;
+      if (textareaRef.current) {
+        textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
       }
     },
   });
@@ -94,9 +120,17 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
     if (isListening) {
       stopListening();
     } else {
+      if (!isSupported) {
+        showToast(
+          lang === 'ar'
+            ? 'ميزة تحويل الصوت إلى نص (Web Speech API) غير مدعومة في هذا المتصفح. استخدم Chrome أو Edge.'
+            : 'Web Speech API is not supported in this browser. Please try Chrome or Edge.'
+        );
+        return;
+      }
       baseInputRef.current = inputValue;
       startListening(voiceLang);
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
     }
   };
 
@@ -209,7 +243,7 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
       stopListening();
     }
     if (!inputValue.trim()) {
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
       showToast(lang === 'ar' ? 'اكتب فكرتك في الحقل أو اضغط الميكروفون للتحدث 💡' : 'Saisissez votre idée ou dictez-la 💡');
       return;
     }
@@ -217,6 +251,16 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
     onSendMessage(inputValue.trim(), selectedCategory, outputLanguage, executionType);
     setInputValue('');
     baseInputRef.current = '';
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleFormSubmit(e as unknown as React.FormEvent);
+    }
   };
 
   return (
@@ -560,15 +604,40 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                           </div>
 
                           {/* Code Block with Generated Meta-Prompt (LTR for English Prompt) */}
-                          <div className="rounded-2xl bg-[#131314] border border-[#2a2b2c] p-4 sm:p-5 overflow-hidden">
-                            <pre
-                              className={`font-mono text-xs sm:text-sm text-slate-200 leading-relaxed overflow-x-auto ${
-                                isExpanded ? 'max-h-[900px]' : 'max-h-[420px]'
-                              } overflow-y-auto whitespace-pre-wrap select-all text-left`}
-                              dir="ltr"
-                            >
-                              <code>{msg.promptData.promptCode}</code>
-                            </pre>
+                          <div className="rounded-2xl bg-[#131314] border border-[#2a2b2c] overflow-hidden">
+                            <div className="flex items-center justify-between px-3.5 py-2 bg-[#1b1c1d] border-b border-[#2a2b2c]">
+                              <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                <span>{lang === 'ar' ? 'نص البرومبت المُولّد' : 'Prompt généré'}</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyText(msg.promptData!.promptCode, `${msg.id}-code`)}
+                                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#282a2c] hover:bg-[#333538] text-slate-200 hover:text-white text-xs font-medium transition-all active:scale-95 cursor-pointer shadow-sm"
+                              >
+                                {copiedId === `${msg.id}-code` || copiedId === msg.id ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span className="text-emerald-400 font-semibold">{lang === 'ar' ? 'تم النسخ!' : 'Copié !'}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5 text-blue-400" />
+                                    <span>{lang === 'ar' ? 'نسخ البرومبت' : 'Copier'}</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            <div className="p-4 sm:p-5">
+                              <pre
+                                className={`font-mono text-xs sm:text-sm text-slate-200 leading-relaxed overflow-x-auto ${
+                                  isExpanded ? 'max-h-[900px]' : 'max-h-[420px]'
+                                } overflow-y-auto whitespace-pre-wrap select-all text-left`}
+                                dir="ltr"
+                              >
+                                <code>{msg.promptData.promptCode}</code>
+                              </pre>
+                            </div>
                           </div>
 
                           {/* Part 2: Executed Tangible Deliverable (Dual Delivery Mode) */}
@@ -728,22 +797,51 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
 
                         </div>
                       ) : (
-                        <div className="rounded-3xl bg-[#1e1f20] border border-[#2d2f31] p-4 sm:p-6 shadow-xl leading-relaxed text-sm sm:text-base text-slate-200 whitespace-pre-wrap">
-                          {msg.content}
+                        <div className="rounded-3xl bg-[#1e1f20] border border-[#2d2f31] p-4 sm:p-6 shadow-xl leading-relaxed text-sm sm:text-base text-slate-200 whitespace-pre-wrap relative">
+                          <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#2d2f31]">
+                            <span className="text-xs text-slate-400 font-medium">
+                              {lang === 'ar' ? 'إجابة النموذج' : 'Réponse'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyText(msg.content, msg.id)}
+                              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#282a2c] hover:bg-[#333538] text-slate-200 hover:text-white text-xs font-medium transition-all active:scale-95 cursor-pointer shadow-sm"
+                              title={lang === 'ar' ? 'نسخ الإجابة' : 'Copier'}
+                            >
+                              {copiedId === msg.id ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span className="text-emerald-400 font-semibold">{lang === 'ar' ? 'تم النسخ!' : 'Copié !'}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5 text-blue-400" />
+                                  <span>{lang === 'ar' ? 'نسخ' : 'Copier'}</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <div>{msg.content}</div>
                         </div>
                       )}
 
                       {/* Gemini Bottom Interaction Icons */}
-                      <div className="flex items-center gap-1.5 text-slate-400 px-1 pt-1">
+                      <div className="flex items-center gap-1.5 text-slate-400 px-1 pt-1 flex-wrap">
                         <button
                           onClick={() => handleCopyText(msg.promptData?.promptCode || msg.content, msg.id)}
-                          className="p-2 rounded-full hover:bg-[#282a2c] hover:text-white transition-colors active:scale-95"
-                          title={lang === 'ar' ? 'نسخ البرومبت' : 'Copier'}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#282a2c]/80 hover:bg-[#282a2c] text-slate-300 hover:text-white text-xs transition-colors active:scale-95 border border-[#383a3c]/60 shadow-sm cursor-pointer"
+                          title={lang === 'ar' ? 'نسخ النص للحافظة' : 'Copier dans le presse-papier'}
                         >
                           {copiedId === msg.id ? (
-                            <Check className="w-4 h-4 text-emerald-400" />
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              <span className="text-emerald-400 font-medium">{lang === 'ar' ? 'تم النسخ!' : 'Copié !'}</span>
+                            </>
                           ) : (
-                            <Copy className="w-4 h-4" />
+                            <>
+                              <Copy className="w-3.5 h-3.5 text-blue-400" />
+                              <span className="font-medium">{lang === 'ar' ? 'نسخ' : 'Copier'}</span>
+                            </>
                           )}
                         </button>
                         <button
@@ -977,51 +1075,117 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
           </button>
         </div>
 
-        {/* Composer Pill: Perfectly sized on mobile with visible Send button */}
+        {/* Active Voice Dictation Visualizer Banner */}
+        {isListening && (
+          <div
+            className="pointer-events-auto w-full max-w-xl px-4 py-2.5 rounded-2xl bg-[#1a1b1e]/95 border border-red-500/50 text-white text-xs flex items-center justify-between gap-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150 backdrop-blur-md mb-2"
+            dir={lang === 'ar' ? 'rtl' : 'ltr'}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="relative flex h-3 w-3 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+              <div className="flex flex-col text-start min-w-0">
+                <span className="font-semibold text-red-300 flex items-center gap-1.5 text-xs">
+                  <span>{lang === 'ar' ? '🎙️ جارٍ الاستماع... تكلّم الآن' : lang === 'fr' ? '🎙️ Écoute en cours...' : '🎙️ Listening... speak now'}</span>
+                  <span className="text-[10px] text-slate-300 font-mono px-1.5 py-0.2 rounded bg-black/40 border border-white/10">
+                    {voiceLang}
+                  </span>
+                </span>
+                <span className="text-[11px] text-slate-300 truncate max-w-[220px] sm:max-w-sm font-sans mt-0.5">
+                  {interimText || (lang === 'ar' ? 'صوتك يتحول لنص تلقائياً...' : 'Your speech appears here in real time...')}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Quick Language switch buttons */}
+              <button
+                type="button"
+                onClick={() => {
+                  const nextLang = voiceLang.startsWith('ar') ? 'en-US' : voiceLang.startsWith('en') ? 'fr-FR' : 'ar-SA';
+                  setVoiceLang(nextLang);
+                  startListening(nextLang);
+                }}
+                className="px-2 py-1 rounded-full bg-[#282a2c] hover:bg-[#333537] text-[10px] font-mono text-slate-200 border border-[#444746] transition-colors cursor-pointer"
+                title="Changer langue vocale / تغيير لغة الصوت"
+              >
+                {voiceLang.slice(0, 2).toUpperCase()}
+              </button>
+
+              {/* Stop button */}
+              <button
+                type="button"
+                onClick={stopListening}
+                className="px-3 py-1 rounded-full bg-red-500 hover:bg-red-600 text-white font-medium text-xs transition-colors flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>{lang === 'ar' ? 'تم' : 'OK'}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Composer Pill: Auto-expanding container for multiline and long text */}
         <form
           onSubmit={handleFormSubmit}
-          className="pointer-events-auto w-full max-w-xl bg-[#1e1f20] border border-[#2d2f31] rounded-full h-14 sm:h-16 px-2.5 sm:px-3.5 flex items-center gap-1.5 sm:gap-2 shadow-2xl"
+          className={`pointer-events-auto w-full max-w-xl bg-[#1e1f20] border ${
+            isListening
+              ? 'border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.25)]'
+              : 'border-[#2d2f31]'
+          } rounded-[28px] min-h-[56px] sm:min-h-[64px] py-2 px-2.5 sm:px-3.5 flex items-end gap-1.5 sm:gap-2 shadow-2xl transition-all`}
           dir="ltr"
         >
           {/* Plus Button - Triggers Drawer / Category Bottom Sheet */}
           <button
             type="button"
             onClick={onOpenBottomSheet}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full hover:bg-[#282a2c] active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition-colors shrink-0"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full hover:bg-[#282a2c] active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition-colors shrink-0 mb-0.5"
             title="Options & Catégories"
           >
             <Plus className="w-5 h-5 text-slate-200" />
           </button>
 
-          {/* Text Input for User's Idea - Made slightly smaller with min-w-0 to never overflow */}
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder={
-              isListening
-                ? (lang === 'ar' ? '🎙️ جارٍ الاستماع... تكلّم الآن...' : '🎙️ Écoute en cours...')
-                : (lang === 'ar' ? 'اكتب فكرتك هنا...' : 'Demandez ...')
-            }
-            className={`flex-1 min-w-0 bg-transparent text-sm sm:text-base text-white placeholder-slate-400 focus:outline-none px-1.5 sm:px-2 py-1 transition-colors ${
-              isListening ? 'placeholder-red-400 font-medium' : ''
-            }`}
-          />
+          {/* Multiline auto-expanding textarea for User's Idea */}
+          <div className="flex-1 min-w-0 flex items-center py-0.5">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              dir="auto"
+              placeholder={
+                isListening
+                  ? (lang === 'ar' ? '🎙️ جارٍ الاستماع... تكلّم الآن...' : '🎙️ Écoute en cours...')
+                  : (lang === 'ar' ? 'اكتب فكرتك هنا...' : 'Demandez ...')
+              }
+              className={`w-full bg-transparent text-sm sm:text-base text-white placeholder-slate-400 focus:outline-none px-1.5 sm:px-2 py-1 transition-colors resize-none overflow-y-auto leading-relaxed max-h-[180px] ${
+                isListening ? 'placeholder-red-400 font-medium' : ''
+              }`}
+              style={{ minHeight: '26px' }}
+            />
+          </div>
 
           {/* Voice Dictation (Web Speech API) Button */}
           <button
             type="button"
             onClick={handleToggleVoice}
-            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full active:scale-95 flex items-center justify-center transition-all shrink-0 ${
+            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full active:scale-95 flex items-center justify-center transition-all shrink-0 cursor-pointer mb-0.5 ${
               isListening
-                ? 'bg-red-500/25 text-red-400 border border-red-500'
+                ? 'bg-red-500/25 text-red-400 border border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
                 : 'text-slate-300 hover:text-white hover:bg-[#282a2c]'
             }`}
-            title={lang === 'ar' ? 'إملاء صوتي' : 'Saisie vocale'}
+            title={
+              isListening
+                ? (lang === 'ar' ? 'إيقاف الإملاء الصوتي' : 'Arrêter la saisie vocale')
+                : (lang === 'ar' ? `بدء الإملاء الصوتي (${voiceLang})` : `Démarrer la saisie vocale (${voiceLang})`)
+            }
+            aria-label="Voice input toggle"
           >
             {isListening ? (
-              <MicOff className="w-5 h-5 text-red-400 animate-pulse" />
+              <AudioWaveform className="w-5 h-5 text-red-400 animate-pulse" />
             ) : (
               <Mic className="w-5 h-5 text-slate-300" />
             )}
@@ -1031,7 +1195,7 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
           <button
             type="submit"
             disabled={isLoading}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#1b6ef3] hover:bg-[#1860d5] active:scale-95 text-white flex items-center justify-center transition-all shrink-0 shadow-lg cursor-pointer disabled:opacity-50"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#1b6ef3] hover:bg-[#1860d5] active:scale-95 text-white flex items-center justify-center transition-all shrink-0 shadow-lg cursor-pointer disabled:opacity-50 mb-0.5"
             title={lang === 'ar' ? 'زر الإدخال / توليد البرومبت' : 'Bouton d\'envoi'}
           >
             <Send className="w-4 h-4 translate-x-[-0.5px] text-white" />

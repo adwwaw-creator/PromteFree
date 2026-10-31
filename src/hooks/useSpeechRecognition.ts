@@ -34,27 +34,62 @@ export function useSpeechRecognition({ onTranscriptChange, lang = 'ar-SA' }: Use
   const recognitionRef = useRef<any>(null);
   const onTranscriptChangeRef = useRef(onTranscriptChange);
   const isManuallyStoppedRef = useRef(false);
+  const currentLangRef = useRef(lang);
+
+  useEffect(() => {
+    currentLangRef.current = lang;
+  }, [lang]);
 
   useEffect(() => {
     onTranscriptChangeRef.current = onTranscriptChange;
   }, [onTranscriptChange]);
 
+  // Initial check for Web Speech API support
   useEffect(() => {
+    const SpeechRecognition =
+      typeof window !== 'undefined'
+        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        : null;
+    setIsSupported(!!SpeechRecognition);
+  }, []);
+
+  const stopListening = useCallback(() => {
+    isManuallyStoppedRef.current = true;
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+    }
+    setIsListening(false);
+    setInterimText('');
+  }, []);
+
+  const startListening = useCallback((customLang?: string) => {
     const SpeechRecognition =
       typeof window !== 'undefined'
         ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
         : null;
 
     if (!SpeechRecognition) {
+      setErrorMessage('not-supported');
       setIsSupported(false);
       return;
+    }
+
+    // Abort existing instance before starting a new one
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch {}
+      recognitionRef.current = null;
     }
 
     try {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = lang;
+      recognition.maxAlternatives = 1;
+      recognition.lang = customLang || currentLangRef.current || 'ar-SA';
 
       recognition.onstart = () => {
         setIsListening(true);
@@ -85,7 +120,7 @@ export function useSpeechRecognition({ onTranscriptChange, lang = 'ar-SA' }: Use
 
       recognition.onerror = (event: SpeechRecognitionErrorLike) => {
         if (event.error === 'no-speech') {
-          // Normal timeout on silence - do not treat as fatal error
+          // Silence timeout — keep listening if not manually stopped
           return;
         }
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
@@ -102,61 +137,16 @@ export function useSpeechRecognition({ onTranscriptChange, lang = 'ar-SA' }: Use
       };
 
       recognitionRef.current = recognition;
-    } catch {
-      setIsSupported(false);
+      setErrorMessage(null);
+      setTranscript('');
+      setInterimText('');
+      isManuallyStoppedRef.current = false;
+      recognition.start();
+    } catch (err: any) {
+      console.warn('Speech recognition start failed:', err);
+      setErrorMessage(err?.message || 'start-failed');
+      setIsListening(false);
     }
-
-    return () => {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.abort();
-        } catch {}
-      }
-    };
-  }, [lang]);
-
-  const startListening = useCallback(
-    (customLang?: string) => {
-      if (!recognitionRef.current) {
-        setErrorMessage('not-supported');
-        return;
-      }
-      try {
-        if (customLang && recognitionRef.current) {
-          recognitionRef.current.lang = customLang;
-        }
-        setErrorMessage(null);
-        setTranscript('');
-        setInterimText('');
-        isManuallyStoppedRef.current = false;
-        recognitionRef.current.start();
-      } catch (err: any) {
-        if (err?.name === 'InvalidStateError') {
-          try {
-            recognitionRef.current.stop();
-            setTimeout(() => {
-              try {
-                recognitionRef.current.start();
-              } catch {}
-            }, 120);
-          } catch {}
-        } else {
-          console.warn('Speech recognition start error:', err);
-        }
-      }
-    },
-    []
-  );
-
-  const stopListening = useCallback(() => {
-    isManuallyStoppedRef.current = true;
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {}
-    }
-    setIsListening(false);
-    setInterimText('');
   }, []);
 
   const toggleListening = useCallback(
@@ -169,6 +159,16 @@ export function useSpeechRecognition({ onTranscriptChange, lang = 'ar-SA' }: Use
     },
     [isListening, startListening, stopListening]
   );
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {}
+      }
+    };
+  }, []);
 
   return {
     isListening,

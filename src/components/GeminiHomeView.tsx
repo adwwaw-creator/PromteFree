@@ -588,7 +588,43 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                 className="h-32 sm:h-36 rounded-2xl bg-[#171a26] hover:bg-[#1f2434] border border-[#2b3044] hover:border-blue-500/50 flex flex-col items-center justify-center gap-2 transition-all shadow-md group active:scale-95"
               >
                 <span className="text-3xl group-hover:scale-110 transition-transform">🎵</span>
-                <span className="text-sm sm:text-base font-bold text-white">الموسيقى</span>
+                <span className="text-sm sm:text-base font-bold text-white">{lang === 'ar' ? 'الموسيقى' : 'Music'}</span>
+              </button>
+
+              {/* الصحة والطب (Evidence-Based Health) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('health');
+                  onSendMessage(
+                    lang === 'ar' ? 'دليل تثقيفي صحي موثق بأدلة منظمة الصحة العالمية وCochrane حول نمط الحياة الصحي والوقاية من متلازمة الأيض' : 'Evidence-based health guide on metabolic health conforming to WHO and Cochrane guidelines',
+                    'health',
+                    outputLanguage,
+                    executionType
+                  );
+                }}
+                className="h-32 sm:h-36 rounded-2xl bg-[#171a26] hover:bg-[#1f2434] border border-[#2b3044] hover:border-blue-500/50 flex flex-col items-center justify-center gap-2 transition-all shadow-md group active:scale-95"
+              >
+                <span className="text-3xl group-hover:scale-110 transition-transform">🩺</span>
+                <span className="text-sm sm:text-base font-bold text-white">{lang === 'ar' ? 'الصحة والطب' : 'Health'}</span>
+              </button>
+
+              {/* التعليم والتصميم التعليمي (Instructional Design) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('education');
+                  onSendMessage(
+                    lang === 'ar' ? 'خطة درس تعليمي تفاعلي مع أهداف SMART وتمايز بيداغوجي وفق سلم بلوم' : 'Interactive lesson plan with SMART objectives and Bloom taxonomy scaffolding',
+                    'education',
+                    outputLanguage,
+                    executionType
+                  );
+                }}
+                className="h-32 sm:h-36 rounded-2xl bg-[#171a26] hover:bg-[#1f2434] border border-[#2b3044] hover:border-blue-500/50 flex flex-col items-center justify-center gap-2 transition-all shadow-md group active:scale-95"
+              >
+                <span className="text-3xl group-hover:scale-110 transition-transform">🎓</span>
+                <span className="text-sm sm:text-base font-bold text-white">{lang === 'ar' ? 'التعليم' : 'Education'}</span>
               </button>
             </div>
 

@@ -26,6 +26,7 @@ export const PromptLibraryModal: React.FC<PromptLibraryModalProps> = ({
   const categories = [
     { id: 'all', labelAr: 'جميع البرومبتات', labelFr: 'Tous les prompts', labelEn: 'All Prompts' },
     { id: 'gemini-api', labelAr: '⚡ Google AI Studio (Gemini SDK)', labelFr: '⚡ Google AI Studio (Gemini SDK)', labelEn: '⚡ Google AI Studio (Gemini SDK)' },
+    { id: 'health', labelAr: '🩺 الصحة والطب المبني على البراهين', labelFr: '🩺 Santé & Médecine Factuelle', labelEn: '🩺 Evidence-Based Health' },
     { id: 'photography', labelAr: '🖼️ الصور والسينما', labelFr: '🖼️ Photographie & Art', labelEn: '🖼️ Photography & Art' },
     { id: 'education', labelAr: '🎓 التعليم والتدريس', labelFr: '🎓 Éducation & Enseignement', labelEn: '🎓 Education & Teaching' },
     { id: 'student', labelAr: '📚 الطلاب والبحوث', labelFr: '📚 Tuteur Virtuel & Étudiants', labelEn: '📚 Student & Virtual Tutor' },

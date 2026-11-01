@@ -1,6 +1,6 @@
 export interface LibraryPromptItem {
   id: string;
-  category: 'photography' | 'education' | 'student' | 'business' | 'creative' | 'code' | 'framework' | 'gemini-api';
+  category: 'photography' | 'education' | 'student' | 'business' | 'creative' | 'code' | 'framework' | 'gemini-api' | 'health';
   categoryLabelAr: string;
   categoryLabelFr: string;
   categoryLabelEn: string;
@@ -20,6 +20,51 @@ export interface LibraryPromptItem {
 }
 
 export const promptLibrary: LibraryPromptItem[] = [
+  // --- SECTION: EVIDENCE-BASED HEALTH (ARABIPROMPT V4.0) ---
+  {
+    id: 'evidence_based_health_specialist',
+    category: 'health',
+    categoryLabelAr: '🩺 الصحة والطب المبني على البراهين',
+    categoryLabelFr: '🩺 Santé & Médecine Factuelle',
+    categoryLabelEn: '🩺 Evidence-Based Health Information',
+    titleAr: 'دليل التثقيف الصحي المبني على البراهين السريرية (WHO & Cochrane)',
+    titleFr: 'Guide d\'Information Médicale Factuelle & Protocoles Cliniques',
+    titleEn: 'Evidence-Based Health Information Specialist Blueprint',
+    descriptionAr: 'هيكلة توعوية طبية تعتمد على مراجعات كوكرين وإرشادات الصحة العالمية مع تفنيد المغالطات وإلزامية إخلاء المسؤولية.',
+    descriptionFr: 'Synthèse d\'information médicale rigoureuse basée sur les revues Cochrane et directives OMS.',
+    descriptionEn: 'Rigorous clinical and lifestyle health guidance conforming to Cochrane reviews, PubMed citations, and explicit medical disclaimers.',
+    sourceDoc: 'WHO Clinical Guidelines & Cochrane Systematic Reviews',
+    tags: ['health', 'medicine', 'cochrane', 'who', 'pubmed', 'clinical', 'evidence-based', 'v4.0'],
+    defaultModel: 'gemini-2.5-flash',
+    temperature: 0.1,
+    prompt: `# ARABIPROMPT ENTERPRISE V4.0
+# ROLE: Evidence-Based Health Information Specialist
+# STANDARDS: WHO Clinical Guidelines, Cochrane Systematic Reviews & PubMed Protocols
+
+## ROLE
+You are an Evidence-Based Health Information Specialist.
+Synthesize verified, peer-reviewed biomedical and clinical literature with absolute precision, zero hallucination, and compassionate clarity.
+
+## OBJECTIVE
+Deliver a comprehensive, evidence-grounded educational health guide on the requested topic without overstepping clinical diagnostic boundaries.
+
+## CONTEXT & BOUNDARIES
+- Target Audience: Health-conscious individuals seeking verified medical clarity.
+- Grounding: Prioritize Cochrane Systematic Reviews, WHO clinical practice guidelines, and high-impact peer-reviewed trials (PubMed).
+- Clinical Demarcation: Provide evidence-based education; never attempt remote individual medical diagnosis, drug dosage prescribing, or surgical instruction.
+
+## CONSTRAINTS & RELIABILITY PROTOCOL
+1. Mandatory Clinical Disclaimer: Explicitly state that this material is for educational purposes only and cannot substitute for personalized clinical evaluation by a licensed physician.
+2. Anti-Hallucination: Never fabricate clinical trials, citations, or pharmacological mechanisms.
+3. Distinguish established empirical consensus from preliminary observational findings.
+4. Highlight contraindications, common misconceptions, and lifestyle interventions supported by grade-A evidence.
+
+## OUTPUT FORMAT (V4.0 OUTPUT CONTRACT)
+PART 1 — ENGINEERED PROMPT: The optimized prompt for medical research synthesis.
+PART 2 — EXECUTED RESULT: Complete evidence-based health educational report.
+PART 3 — VALIDATION: Concise analysis of evidentiary strength, limitations, and contraindications.`,
+  },
+
   // --- SECTION 0: GOOGLE AI STUDIO (GEMINI API / google-genai SDK) PROMPTS & BOTS ---
   {
     id: 'linkedin_json_to_markdown',

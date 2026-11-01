@@ -25,7 +25,7 @@ const DEFAULT_USER: UserSession = {
   isLoggedIn: true,
   name: 'Adwaw',
   email: 'dawrachid4@gmail.com',
-  avatar: '/assets/user_avatar.png',
+  avatar: './assets/user_avatar.png',
 };
 
 interface SavedSession {

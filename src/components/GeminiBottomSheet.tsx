@@ -203,7 +203,7 @@ export const GeminiBottomSheet: React.FC<GeminiBottomSheetProps> = ({
               <span>{lang === 'ar' ? 'إعدادات توليد البرومت المتقدمة' : 'Paramètres Avancés'}</span>
             </span>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#282a2c] text-blue-300 border border-[#3c4043]">
-              ArabiPrompt
+              ArabiPrompt V4.0
             </span>
           </div>
 

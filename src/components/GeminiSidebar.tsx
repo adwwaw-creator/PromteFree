@@ -58,7 +58,7 @@ export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
     isLoggedIn: true,
     name: 'Adwaw',
     email: 'dawrachid4@gmail.com',
-    avatar: '/assets/user_avatar.png',
+    avatar: './assets/user_avatar.png',
   },
   onSignOut,
   onSignIn,
@@ -296,12 +296,12 @@ export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="relative shrink-0">
                     <img
-                      src={userSession.avatar || '/assets/user_avatar.png'}
+                      src={userSession.avatar || './assets/user_avatar.png'}
                       alt={userSession.name}
                       className="w-9 h-9 rounded-full object-cover border border-[#5f6368] shadow-sm"
                       onError={(e) => {
                         // Fallback in case image fails to load
-                        (e.target as HTMLImageElement).src = '/assets/user_avatar.png';
+                        (e.target as HTMLImageElement).src = './assets/user_avatar.png';
                       }}
                     />
                     <span className="absolute bottom-0 end-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[#0e1012]" />

@@ -25,7 +25,7 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
     isLoggedIn: true,
     name: 'Adwaw',
     email: 'dawrachid4@gmail.com',
-    avatar: '/assets/user_avatar.png',
+    avatar: './assets/user_avatar.png',
   },
   onSignOut,
   onSignIn,
@@ -38,7 +38,7 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
   const isLoggedIn = userSession ? userSession.isLoggedIn : internalLoggedIn;
   const userName = userSession?.name || 'Adwaw';
   const userEmail = userSession?.email || 'dawrachid4@gmail.com';
-  const userAvatar = userSession?.avatar || '/assets/user_avatar.png';
+  const userAvatar = userSession?.avatar || './assets/user_avatar.png';
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -510,7 +510,7 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
               alt={userName}
               className="w-full h-full object-cover rounded-full"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/assets/user_avatar.png';
+                (e.target as HTMLImageElement).src = './assets/user_avatar.png';
               }}
             />
           </button>
@@ -577,7 +577,7 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
                       alt={userName}
                       className="w-16 h-16 rounded-full object-cover border-2 border-[#7cacf8] shadow-md"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/assets/user_avatar.png';
+                        (e.target as HTMLImageElement).src = './assets/user_avatar.png';
                       }}
                     />
                   </div>
@@ -647,7 +647,7 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
                     alt={userName}
                     className="w-4 h-4 rounded-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/assets/user_avatar.png';
+                      (e.target as HTMLImageElement).src = './assets/user_avatar.png';
                     }}
                   />
                   <span>

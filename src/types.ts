@@ -33,6 +33,7 @@ export type PromptCategory =
   | 'education'
   | 'student'
   | 'business'
+  | 'health'
   | 'general';
 
 export type OutputLanguage = 'ar' | 'darija' | 'en' | 'fr';

@@ -5,7 +5,6 @@ import { GeminiBottomSheet } from './components/GeminiBottomSheet';
 import { GeminiSidebar } from './components/GeminiSidebar';
 import { PromptLibraryModal } from './components/PromptLibraryModal';
 import { PromptRulesModal } from './components/PromptRulesModal';
-import { NotebookLMView } from './components/notebooklm/NotebookLMView';
 import {
   TargetModel,
   ChatMessage,
@@ -37,7 +36,6 @@ interface SavedSession {
 
 export default function App() {
   const [lang, setLang] = useState<'ar' | 'en' | 'fr'>('ar');
-  const [activeAppMode, setActiveAppMode] = useState<'gemini' | 'notebooklm'>('gemini');
   const [currentModel, setCurrentModel] = useState<TargetModel>('gemini-flash-lite');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
@@ -235,16 +233,6 @@ export default function App() {
     setMessages([]);
   };
 
-  // If user selected NotebookLM mode, render the full NotebookLM studio
-  if (activeAppMode === 'notebooklm') {
-    return (
-      <NotebookLMView
-        onBackToGemini={() => setActiveAppMode('gemini')}
-        lang={lang}
-      />
-    );
-  }
-
   return (
     <div className="w-full min-h-screen bg-[#000000] bg-[radial-gradient(ellipse_80%_80%_at_50%_100%,rgba(10,24,60,0.65),rgba(0,0,0,1))] text-[#f5f6fc] flex flex-col font-sans selection:bg-[#647de8] selection:text-white m-0 p-0 overflow-x-hidden">
       
@@ -254,7 +242,6 @@ export default function App() {
         onSelectModel={(model) => setCurrentModel(model)}
         onOpenDrawer={() => setIsSidebarOpen(true)}
         onNewChat={handleNewChat}
-        onOpenNotebookLM={() => setActiveAppMode('notebooklm')}
         lang={lang}
         setLang={(newLang) => setLang(newLang)}
         userSession={userSession}
@@ -307,7 +294,6 @@ export default function App() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onNewChat={handleNewChat}
-        onOpenNotebookLM={() => setActiveAppMode('notebooklm')}
         onOpenLibrary={() => setIsLibraryOpen(true)}
         onOpenRules={() => setIsRulesOpen(true)}
         onSelectCategory={handleSelectCategoryFromDrawer}

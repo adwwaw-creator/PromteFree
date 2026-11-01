@@ -5,7 +5,7 @@ import { GeminiBottomSheet } from './components/GeminiBottomSheet';
 import { GeminiSidebar } from './components/GeminiSidebar';
 import { PromptLibraryModal } from './components/PromptLibraryModal';
 import { PromptRulesModal } from './components/PromptRulesModal';
-import { StyleTransferModal } from './components/StyleTransferModal';
+import { NotebookLMView } from './components/notebooklm/NotebookLMView';
 import {
   TargetModel,
   ChatMessage,
@@ -37,12 +37,12 @@ interface SavedSession {
 
 export default function App() {
   const [lang, setLang] = useState<'ar' | 'en' | 'fr'>('ar');
+  const [activeAppMode, setActiveAppMode] = useState<'gemini' | 'notebooklm'>('gemini');
   const [currentModel, setCurrentModel] = useState<TargetModel>('gemini-flash-lite');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
-  const [isStyleTransferOpen, setIsStyleTransferOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   // User Session Management
@@ -186,63 +186,6 @@ export default function App() {
     }, 450);
   };
 
-  const handleInjectStyleTransferPrompt = (
-    promptText: string,
-    title: string,
-    explanation: string
-  ) => {
-    const userMsg: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: `🔄 [الهندسة العكسية لنقل النمط]: ${title}`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    const promptData = ArabiPromptEngine.generate(title, {
-      category: 'image',
-      language: outputLanguage,
-      model: currentModel,
-      detail: detailLevel,
-      delivery: deliveryMode,
-      tone,
-      brand: true,
-    });
-
-    promptData.title = title;
-    promptData.prompt = promptText;
-    promptData.promptCode = promptText;
-    promptData.executionResult = explanation;
-    promptData.assumptions = [
-      'تم تفكيك لوحة الألوان والإضاءة والملمس والوسيط الفني من الصورة 1 بنجاح',
-      'تم تطبيق النمط بالكامل على موضوع وتكوين الصورة 2',
-      'يدعم Midjourney v6 (--sref) و FLUX.1 و DALL-E 3 و Imagen 3',
-    ];
-
-    const modelMsg: ChatMessage = {
-      id: (Date.now() + 1).toString(),
-      role: 'model',
-      content: '',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      model: currentModel,
-      promptData,
-    };
-
-    setMessages((prev) => [...prev, userMsg, modelMsg]);
-
-    const newSession: SavedSession = {
-      id: Date.now().toString(),
-      title: title.slice(0, 48),
-      messages: [{ idea: `🔄 [نقل النمط]: ${title}`, prompt: promptText }],
-    };
-    saveSessionsToStorage([newSession, ...sessions.filter((s) => s.title !== newSession.title)]);
-
-    showToast(
-      lang === 'ar'
-        ? 'تمت إضافة برومبت نقل النمط المعكوس إلى المحادثة بنجاح! 🎨'
-        : 'Style transfer prompt added to chat! 🎨'
-    );
-  };
-
   const handleSelectCategoryFromDrawer = (cat: PromptCategory, sampleText?: string) => {
     setSelectedCategory(cat);
     if (sampleText) {
@@ -292,6 +235,16 @@ export default function App() {
     setMessages([]);
   };
 
+  // If user selected NotebookLM mode, render the full NotebookLM studio
+  if (activeAppMode === 'notebooklm') {
+    return (
+      <NotebookLMView
+        onBackToGemini={() => setActiveAppMode('gemini')}
+        lang={lang}
+      />
+    );
+  }
+
   return (
     <div className="w-full min-h-screen bg-[#000000] bg-[radial-gradient(ellipse_80%_80%_at_50%_100%,rgba(10,24,60,0.65),rgba(0,0,0,1))] text-[#f5f6fc] flex flex-col font-sans selection:bg-[#647de8] selection:text-white m-0 p-0 overflow-x-hidden">
       
@@ -301,6 +254,7 @@ export default function App() {
         onSelectModel={(model) => setCurrentModel(model)}
         onOpenDrawer={() => setIsSidebarOpen(true)}
         onNewChat={handleNewChat}
+        onOpenNotebookLM={() => setActiveAppMode('notebooklm')}
         lang={lang}
         setLang={(newLang) => setLang(newLang)}
         userSession={userSession}
@@ -331,7 +285,6 @@ export default function App() {
           setDeliveryMode={setDeliveryMode}
           tone={tone}
           setTone={setTone}
-          onOpenStyleTransfer={() => setIsStyleTransferOpen(true)}
         />
       </main>
 
@@ -347,7 +300,6 @@ export default function App() {
         setDeliveryMode={setDeliveryMode}
         tone={tone}
         setTone={setTone}
-        onOpenStyleTransfer={() => setIsStyleTransferOpen(true)}
       />
 
       {/* Sidebar Drawer matching Gemini official UI */}
@@ -355,6 +307,7 @@ export default function App() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onNewChat={handleNewChat}
+        onOpenNotebookLM={() => setActiveAppMode('notebooklm')}
         onOpenLibrary={() => setIsLibraryOpen(true)}
         onOpenRules={() => setIsRulesOpen(true)}
         onSelectCategory={handleSelectCategoryFromDrawer}
@@ -386,14 +339,6 @@ export default function App() {
           handleGeneratePrompt(template, selectedCategory, outputLanguage, executionType);
         }}
         lang={lang}
-      />
-
-      {/* Free Reverse Engineering Style Transfer Modal (صورة ➜ صورة) */}
-      <StyleTransferModal
-        isOpen={isStyleTransferOpen}
-        onClose={() => setIsStyleTransferOpen(false)}
-        lang={lang}
-        onInjectPromptIntoChat={handleInjectStyleTransferPrompt}
       />
 
       {/* Global Floating Action Feedback Toast */}

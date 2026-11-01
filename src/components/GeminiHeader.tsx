@@ -7,6 +7,7 @@ interface GeminiHeaderProps {
   onSelectModel: (model: TargetModel) => void;
   onOpenDrawer: () => void;
   onNewChat: () => void;
+  onOpenNotebookLM?: () => void;
   lang: 'ar' | 'en' | 'fr';
   setLang: (lang: 'ar' | 'en' | 'fr') => void;
   userSession?: UserSession;
@@ -19,6 +20,7 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
   onSelectModel,
   onOpenDrawer,
   onNewChat,
+  onOpenNotebookLM,
   lang,
   setLang,
   userSession = {
@@ -464,6 +466,23 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
         )}
         </div>
       </div>
+
+      {/* Center: NotebookLM Switcher Button */}
+      {onOpenNotebookLM && (
+        <button
+          onClick={onOpenNotebookLM}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-900/30 to-purple-900/30 hover:from-blue-800/40 hover:to-purple-800/40 border border-blue-500/30 hover:border-blue-400 text-white transition-all shadow-sm active:scale-95 group text-xs sm:text-sm font-medium"
+          title={lang === 'ar' ? 'فتح Google NotebookLM (أبحاث ومصادر موثقة)' : 'Open NotebookLM'}
+        >
+          <span className="w-5 h-5 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-[11px] font-black group-hover:scale-105 transition-transform">
+            N
+          </span>
+          <span className="font-semibold text-white tracking-tight">NotebookLM</span>
+          <span className="text-[10px] text-blue-300 font-mono hidden sm:inline bg-blue-950/60 px-1.5 py-0.2 rounded-full border border-blue-800/40">
+            {lang === 'ar' ? 'استوديو الأبحاث' : 'Studio'}
+          </span>
+        </button>
+      )}
 
       {/* Right side: Language switch + New Chat (pencil with sparkle/dashed ring) + Google User Profile Avatar */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0" ref={userMenuRef}>

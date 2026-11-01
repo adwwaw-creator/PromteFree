@@ -1,18 +1,9 @@
 // buildPrompt.ts — نسخة محسّنة من قالب ArabiPrompt
 // الاستخدام: const systemPrompt = buildPrompt(userIdea, { target: "claude", detail: "medium", delivery: "both" });
 
-export type TargetModel =
-  | 'claude'
-  | 'gpt'
-  | 'gemini'
-  | 'midjourney'
-  | 'deepseek'
-  | 'llama'
-  | 'qwen'
-  | 'manus';
+import type { TargetModel, DetailLevel, DeliveryMode } from '../types';
 
-export type DetailLevel = 'short' | 'medium' | 'detailed';
-export type DeliveryMode = 'prompt_only' | 'result_only' | 'both';
+export type { TargetModel, DetailLevel, DeliveryMode };
 
 export interface Options {
   target?: TargetModel | string;
@@ -23,7 +14,7 @@ export interface Options {
 }
 
 // صيغة مخصصة لكل نموذج (بدل ادعاء الشمول)
-export const MODEL_PROFILES: Record<TargetModel, string> = {
+export const MODEL_PROFILES: Record<string, string> = {
   claude:
     'استخدم وسوم XML واضحة (<role>, <context>, <task>, <constraints>, <output_format>). ' +
     'اجعل التعليمات مباشرة وفي بداية البرومت، وضع المدخلات الطويلة داخل وسوم.',
@@ -89,7 +80,7 @@ export function normalizeTargetModel(target?: string): TargetModel {
  * تجمع بين قواعد ArabiPrompt المحدثة والتخصيص الصارم لكل نموذج
  */
 export function buildPrompt(userIdea: string, opts: Options = {}): string {
-  const target: TargetModel = normalizeTargetModel(opts.target);
+  const target: TargetModel = normalizeTargetModel(opts.target as string);
   const detail: DetailLevel = opts.detail ?? 'medium';
   const delivery: DeliveryMode = opts.delivery ?? 'both';
   const lang: string = opts.language ?? 'العربية الفصحى';
@@ -108,7 +99,7 @@ export function buildPrompt(userIdea: string, opts: Options = {}): string {
 
 <model_rules>
 النموذج المستهدف: ${target.toUpperCase()}
-${MODEL_PROFILES[target]}
+${MODEL_PROFILES[target] || MODEL_PROFILES.gemini}
 </model_rules>
 
 <detail_rules>
@@ -148,11 +139,36 @@ export function generateExecutionResult(
   lang: string
 ): string {
   const isArabic = !lang.includes('English') && !lang.includes('en');
+  const targetStr = (typeof target === 'string' ? target : '').toLowerCase();
   
-  if (target === 'midjourney') {
+  if (targetStr.includes('midjourney')) {
     return isArabic
       ? `🎨 [مخرجات توليد الصورة]\nتم إعداد البرومت السينمائي بنجاح. عند لصقه في Midjourney ستحصل على لقطة بمواصفات إضاءة سينمائية حجمية 8K، عدسة 85mm f/1.4، وألوان متوازنة بنسبة أبعاد 16:9 وبدون تشوهات.`
       : `🎨 [Visual Generation Output]\nCinematic prompt crafted. When submitted to Midjourney, it produces an 8K photorealistic scene with 85mm lens optics, volumetric lighting, and --v 6.1 parameters.`;
+  }
+
+  if (targetStr.includes('deepseek')) {
+    return isArabic
+      ? `🐋 [محاكاة تنفيذ DeepSeek-R1 — استدلال عميق وسلسلة تفكير]\n<think>\n1. تحليل الفكرة: تفكيك المسألة واستخلاص الشروط والحدود المنطقية.\n2. فحص الحالات الطرفية (Edge Cases) والتحقق من المتطلبات الخوارزمية خطوة بخطوة.\n3. تطبيق البراهين الصارمة وتفنيد الافتراضات غير المؤكدة لمكافحة الهلوسة.\n</think>\n\nالنتيجة النهائية المثبتة استدلالياً:\nاستناداً إلى مهمتك "${idea.slice(0, 48)}..."، تم حل الإشكالية بمنهجية استدلال متسلسلة وخوارزمية دقيقة مع التحقق الكامل من كافة المخرجات.`
+      : `🐋 [DeepSeek-R1 Deep Reasoning Output]\n<think>\n1. Deconstructing user request and setting up formal constraints.\n2. Iteratively tracing logical deductions and algorithmic verification paths.\n3. Eliminating hallucinations through rigorous step-by-step validation.\n</think>\n\nFinal Verified Output:\nExecuted through deep chain-of-thought analysis for "${idea.slice(0, 48)}..." with comprehensive correctness guarantees.`;
+  }
+
+  if (targetStr.includes('manus')) {
+    return isArabic
+      ? `⚡ [محاكاة تنفيذ وكيل Manus AI المستقل (Autonomous Agent)]\n[المرحلة 1: تهيئة البيئة والأدوات]:\n- تم تجهيز بيئة التشغيل، متصفح الويب، وموجه الأوامر (Terminal Sandbox).\n[المرحلة 2: خطوات الأتمتة المتسلسلة]:\n- الخطوة 1: استطلاع المصادر وجمع المتطلبات المتعلقة بـ "${idea.slice(0, 40)}...".\n- الخطوة 2: إنشاء الملفات والوحدات الوظيفية وأتمتة مسارات العمل.\n- الخطوة 3: التحقق الذاتي (Self-Correction Checkpoint) واختبار المخرجات.\n[المخرجات المنجزة]:\nتم استكمال خطة العمل المستقلة بنجاح وتقديم الحزمة التنفيذية الجاهزة للاستخدام الفوري.`
+      : `⚡ [Manus AI Autonomous Agent Execution]\n[Phase 1: Environment & Tooling]: Terminal, browser runtime, and execution sandbox initialized.\n[Phase 2: Multi-step Action Workflow]:\n- Action 1: Context parsing and domain resource gathering for "${idea.slice(0, 40)}...".\n- Action 2: Generating code, scripts, and document artifacts.\n- Action 3: Running self-correction and validation checkpoints.\n[Deliverable]: Full autonomous agent workflow completed and ready for production deployment.`;
+  }
+
+  if (targetStr.includes('llama')) {
+    return isArabic
+      ? `🦙 [مخرجات تنفيذ Meta Llama 3.3 — أداء مفتوح المصدر فائق السرعة]\n- استجابة مباشرة عالية الكثافة تخلو من أي حشو إنشائي زائد.\n- التزام دقيق بتسلسل تعليمات النظام (System Hierarchy) وهندسة المخرجات.\n- تم إنجاز المطلوب حول "${idea.slice(0, 50)}..." بصيغة موثوقة وجاهزة للتشغيل الفوري.`
+      : `🦙 [Meta Llama 3.3 Direct Execution Output]\n- Zero-fluff, high-density factual execution conforming to Llama-3 instruction boundaries.\n- Deliverables for "${idea.slice(0, 50)}..." successfully generated with production-grade precision.`;
+  }
+
+  if (targetStr.includes('qwen')) {
+    return isArabic
+      ? `🔮 [مخرجات تنفيذ Alibaba Qwen 2.5 — تميز اللغات والبرمجة]\n- معالجة لغوية متقدمة ومتناغمة مع أعلى معايير الفصاحة العربية والمصطلحات التقنية.\n- الالتزام التام بنسق ChatML وبنية البيانات المهيكلة.\n- تم إعداد المخرجات المتكاملة لـ "${idea.slice(0, 48)}..." بدقة برمجية وخوارزمية عالية.`
+      : `🔮 [Alibaba Qwen 2.5 Multilingual & Code Output]\n- High-fidelity multilingual synthesis adhering to ChatML syntax and structured schemas.\n- Deliverables for "${idea.slice(0, 48)}..." fully synthesized with enterprise logic.`;
   }
 
   if (category === 'code') {

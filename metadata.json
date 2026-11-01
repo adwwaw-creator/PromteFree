@@ -1,7 +1,9 @@
 {
-  "name": "Gemini",
-  "description": "Gemini - Assistant d'IA conversationnel et créatif de Google",
-  "requestFramePermissions": [],
+  "name": "أصل الهندسة العكسية | Reverse Engineering Studio",
+  "description": "منصة تفاعلية متقدمة لدراسة واستكشاف أصل وأسس الهندسة العكسية، فك التشفير، محاكاة المعالج والذاكرة، وتحليل الشيفرات البرمجية والبرمجيات الخبيثة.",
+  "requestFramePermissions": [
+    "MICROPHONE"
+  ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]

@@ -15,12 +15,12 @@ export const dawaiCategoryCards: CategoryCardItem[] = [
   {
     id: 'code',
     icon: '💻',
-    ar: 'البرمجة',
-    en: 'Code',
-    fr: 'Code',
-    sampleIdeaAr: 'تطبيق ويب متكامل مع معمارية برمجيات نظيفة Clean Architecture',
-    sampleIdeaFr: 'Application web complète avec Clean Architecture et TypeScript strict',
-    sampleIdeaEn: 'Full-stack web application with Clean Architecture and strict TypeScript',
+    ar: 'البرمجة والوكلاء',
+    en: 'Code & Agents',
+    fr: 'Code & Agents',
+    sampleIdeaAr: 'وكيل أتمتة برمجية ذكي (PR Babysitter) يراقب طلبات السحب وفشل الـ CI ويرسل تنبيهات',
+    sampleIdeaFr: 'Agent autonome DevOps (PR Babysitter) pour surveiller les Pull Requests et logs CI/CD',
+    sampleIdeaEn: 'Autonomous DevOps agent (PR Babysitter) tracking pull requests, CI logs, and reviews',
   },
   {
     id: 'image',

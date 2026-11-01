@@ -25,6 +25,7 @@ export const PromptLibraryModal: React.FC<PromptLibraryModalProps> = ({
 
   const categories = [
     { id: 'all', labelAr: 'جميع البرومبتات', labelFr: 'Tous les prompts', labelEn: 'All Prompts' },
+    { id: 'gemini-api', labelAr: '⚡ Google AI Studio (Gemini SDK)', labelFr: '⚡ Google AI Studio (Gemini SDK)', labelEn: '⚡ Google AI Studio (Gemini SDK)' },
     { id: 'photography', labelAr: '🖼️ الصور والسينما', labelFr: '🖼️ Photographie & Art', labelEn: '🖼️ Photography & Art' },
     { id: 'education', labelAr: '🎓 التعليم والتدريس', labelFr: '🎓 Éducation & Enseignement', labelEn: '🎓 Education & Teaching' },
     { id: 'student', labelAr: '📚 الطلاب والبحوث', labelFr: '📚 Tuteur Virtuel & Étudiants', labelEn: '📚 Student & Virtual Tutor' },
@@ -175,13 +176,30 @@ export const PromptLibraryModal: React.FC<PromptLibraryModalProps> = ({
                 className="rounded-3xl bg-[#1b1d25] border border-[#2d2f31] p-4 sm:p-5 flex flex-col justify-between gap-3 shadow-lg hover:border-slate-600 transition-colors"
               >
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-950/80 text-blue-300 border border-blue-800/40 truncate">
                       {lang === 'ar' ? item.categoryLabelAr : lang === 'fr' ? item.categoryLabelFr : item.categoryLabelEn}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono">
-                      {item.sourceDoc}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {item.defaultModel && (
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-950/70 text-emerald-300 border border-emerald-800/40">
+                          {item.defaultModel}
+                        </span>
+                      )}
+                      {item.temperature !== undefined && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-amber-950/60 text-amber-300 border border-amber-800/40">
+                          t:{item.temperature}
+                        </span>
+                      )}
+                      {item.responseMimeType === 'application/json' && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-purple-950/60 text-purple-300 border border-purple-800/40">
+                          JSON
+                        </span>
+                      )}
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {item.sourceDoc}
+                      </span>
+                    </div>
                   </div>
 
                   <h3 className="text-sm sm:text-base font-bold text-white leading-snug">

@@ -37,6 +37,7 @@ interface GeminiSidebarProps {
   onSelectHistorySession: (session: SavedSession) => void;
   onClearHistory: () => void;
   sessions: SavedSession[];
+  onOpenNotebookLM?: () => void;
   lang: 'ar' | 'en' | 'fr';
   userSession?: UserSession;
   onSignOut?: () => void;
@@ -53,6 +54,7 @@ export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
   onSelectHistorySession,
   onClearHistory,
   sessions,
+  onOpenNotebookLM,
   lang,
   userSession = {
     isLoggedIn: true,
@@ -241,9 +243,28 @@ export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
             </span>
           </div>
 
+          {/* Dedicated Google NotebookLM button */}
           <button
             onClick={() => {
-              onNewChat();
+              if (onOpenNotebookLM) onOpenNotebookLM();
+              onClose();
+            }}
+            className="w-full px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-950/50 to-indigo-950/40 border border-blue-500/30 text-white flex items-center justify-between text-sm transition-all hover:border-blue-400/60 group mb-1.5 shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold group-hover:scale-110 transition-transform">
+                N
+              </div>
+              <span className="font-semibold text-white">Google NotebookLM</span>
+            </div>
+            <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30 font-medium">
+              {lang === 'ar' ? 'استوديو' : 'Studio'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (onOpenNotebookLM) onOpenNotebookLM();
               onClose();
             }}
             className="w-full px-4 py-2 rounded-full hover:bg-[#1e1f20] text-slate-300 hover:text-white flex items-center gap-3 text-sm transition-colors text-start"

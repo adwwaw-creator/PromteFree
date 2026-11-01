@@ -102,6 +102,7 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
     isListening,
     interimText,
     errorMessage,
+    audioLevel,
     clearError,
     isSupported,
     startListening,
@@ -118,7 +119,35 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
     },
   });
 
-  const handleToggleVoice = () => {
+  // Handle microphone error feedback
+  useEffect(() => {
+    if (errorMessage) {
+      if (errorMessage === 'permission-denied') {
+        showToast(
+          lang === 'ar'
+            ? '⚠️ تم رفض إذن الميكروفون. يُرجى السماح بالوصول إلى الميكروفون في إعدادات المتصفح.'
+            : lang === 'fr'
+            ? '⚠️ Accès au microphone refusé. Veuillez autoriser le microphone dans les paramètres de votre navigateur.'
+            : '⚠️ Microphone permission denied. Please allow microphone access in your browser settings.'
+        );
+      } else if (errorMessage === 'not-supported') {
+        showToast(
+          lang === 'ar'
+            ? 'ميزة التعرف الصوتي غير مدعومة في هذا المتصفح. يُرجى استخدام متصفح Chrome أو Edge.'
+            : 'Speech recognition is not supported in this browser. Please try Chrome or Edge.'
+        );
+      } else {
+        showToast(
+          lang === 'ar'
+            ? `⚠️ حدث خطأ في الميكروفون: ${errorMessage}`
+            : `⚠️ Microphone error: ${errorMessage}`
+        );
+      }
+      clearError();
+    }
+  }, [errorMessage, lang]);
+
+  const handleToggleVoice = async () => {
     if (isListening) {
       stopListening();
     } else {
@@ -131,7 +160,7 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
         return;
       }
       baseInputRef.current = inputValue;
-      startListening(voiceLang);
+      await startListening(voiceLang);
       textareaRef.current?.focus();
     }
   };
@@ -472,13 +501,13 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                 <span className="text-sm sm:text-base font-bold text-white">الصور</span>
               </button>
 
-              {/* البرمجة */}
+              {/* البرمجة والوكلاء */}
               <button
                 type="button"
                 onClick={() => {
                   setSelectedCategory('code');
                   onSendMessage(
-                    lang === 'ar' ? 'تطبيق ويب متكامل مع معمارية برمجيات نظيفة Clean Architecture' : 'Full-stack web application with Clean Architecture',
+                    lang === 'ar' ? 'وكيل أتمتة برمجية ذكي (PR Babysitter) يراقب طلبات السحب وفشل الـ CI ويرسل تنبيهات' : 'Autonomous DevOps agent (PR Babysitter) tracking pull requests and CI logs',
                     'code',
                     outputLanguage,
                     executionType
@@ -487,7 +516,7 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                 className="h-32 sm:h-36 rounded-2xl bg-[#171a26] hover:bg-[#1f2434] border border-[#2b3044] hover:border-blue-500/50 flex flex-col items-center justify-center gap-2 transition-all shadow-md group active:scale-95"
               >
                 <span className="text-3xl group-hover:scale-110 transition-transform">💻</span>
-                <span className="text-sm sm:text-base font-bold text-white">البرمجة</span>
+                <span className="text-sm sm:text-base font-bold text-white">{lang === 'ar' ? 'البرمجة والوكلاء' : 'Code & Agents'}</span>
               </button>
 
               {/* البحث */}
@@ -1207,12 +1236,27 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
               </span>
               <div className="flex flex-col text-start min-w-0">
-                <span className="font-semibold text-red-300 flex items-center gap-1.5 text-xs">
-                  <span>{lang === 'ar' ? '🎙️ جارٍ الاستماع... تكلّم الآن' : lang === 'fr' ? '🎙️ Écoute en cours...' : '🎙️ Listening... speak now'}</span>
-                  <span className="text-[10px] text-slate-300 font-mono px-1.5 py-0.2 rounded bg-black/40 border border-white/10">
-                    {voiceLang}
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-red-300 flex items-center gap-1.5 text-xs">
+                    <span>{lang === 'ar' ? '🎙️ جارٍ الاستماع... تكلّم الآن' : lang === 'fr' ? '🎙️ Écoute en cours...' : '🎙️ Listening... speak now'}</span>
+                    <span className="text-[10px] text-slate-300 font-mono px-1.5 py-0.2 rounded bg-black/40 border border-white/10">
+                      {voiceLang}
+                    </span>
                   </span>
-                </span>
+                  {/* Real-time Dynamic Soundwave Equalizer */}
+                  <div className="flex items-center gap-0.5 h-3.5 px-1 bg-black/40 rounded border border-white/5">
+                    {[0.6, 1.2, 0.8, 1.4, 0.9, 1.1].map((factor, i) => {
+                      const height = Math.max(3, Math.min(14, Math.round((audioLevel * factor) / 6)));
+                      return (
+                        <span
+                          key={i}
+                          style={{ height: `${height}px` }}
+                          className="w-0.5 bg-red-400 rounded-full transition-all duration-75"
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
                 <span className="text-[11px] text-slate-300 truncate max-w-[220px] sm:max-w-sm font-sans mt-0.5">
                   {interimText || (lang === 'ar' ? 'صوتك يتحول لنص تلقائياً...' : 'Your speech appears here in real time...')}
                 </span>

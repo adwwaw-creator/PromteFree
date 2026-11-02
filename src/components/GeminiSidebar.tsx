@@ -18,8 +18,11 @@ import {
   LogOut,
   User,
   LogIn,
+  Globe,
 } from 'lucide-react';
-import { PromptCategory, UserSession } from '../types';
+import { PromptCategory, UserSession, SupportedLanguage } from '../types';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { t } from '../utils/translations';
 
 interface SavedSession {
   id: string;
@@ -37,7 +40,8 @@ interface GeminiSidebarProps {
   onSelectHistorySession: (session: SavedSession) => void;
   onClearHistory: () => void;
   sessions: SavedSession[];
-  lang: 'ar' | 'en' | 'fr';
+  lang: SupportedLanguage;
+  setLang?: (lang: SupportedLanguage) => void;
   userSession?: UserSession;
   onSignOut?: () => void;
   onSignIn?: () => void;
@@ -54,6 +58,7 @@ export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
   onClearHistory,
   sessions,
   lang,
+  setLang,
   userSession = {
     isLoggedIn: true,
     name: 'Adwaw',
@@ -287,6 +292,24 @@ export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
           </div>
 
         </div>
+
+        {/* Multilingual Selector inside Sidebar */}
+        {setLang && (
+          <div className="px-3.5 py-2.5 border-t border-[#1e1f20] bg-[#0c0d0f]">
+            <div className="flex items-center justify-between mb-2 text-[11px] font-semibold text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-[#7cacf8]" />
+                <span>{t('language', lang)}</span>
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono">9 languages</span>
+            </div>
+            <LanguageSwitcher
+              currentLang={lang}
+              onChangeLanguage={setLang}
+              variant="drawer"
+            />
+          </div>
+        )}
 
         {/* Bottom Profile & Authentication Section */}
         <div className="p-3.5 bg-[#0e1012] border-t border-[#1e1f20] flex flex-col gap-2">

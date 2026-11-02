@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { X, Scale, Copy, Check, ShieldCheck, Sparkles, BookOpen, Layers, Camera, Code2, GraduationCap, Film } from 'lucide-react';
 import { promptRules, PromptRuleItem } from '../data/promptRules';
+import { SupportedLanguage } from '../types';
 
 interface PromptRulesModalProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyTemplate?: (template: string) => void;
-  lang: 'ar' | 'en' | 'fr';
+  lang: SupportedLanguage;
 }
 
 export const PromptRulesModal: React.FC<PromptRulesModalProps> = ({

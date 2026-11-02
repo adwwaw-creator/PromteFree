@@ -1,14 +1,15 @@
 import React from 'react';
 import { Camera, Image as ImageIcon, Paperclip, HardDrive, BookOpen, MapPin, Video, Music, Layout, Sparkles, Compass, Megaphone, Code, HelpCircle, Check, Sliders, Layers, FileText } from 'lucide-react';
-import { PromptCategory, DetailLevel, DeliveryMode } from '../types';
+import { PromptCategory, DetailLevel, DeliveryMode, SupportedLanguage } from '../types';
 import { dawaiCategoryCards } from '../data/prompts';
 import { AdSenseBanner } from './AdSenseBanner';
+import { t } from '../utils/translations';
 
 interface GeminiBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectCategory: (cat: PromptCategory, sampleText?: string) => void;
-  lang: 'ar' | 'en' | 'fr';
+  lang: SupportedLanguage;
   detailLevel?: DetailLevel;
   setDetailLevel?: (d: DetailLevel) => void;
   deliveryMode?: DeliveryMode;

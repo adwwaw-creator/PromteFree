@@ -14,8 +14,10 @@ import {
   DetailLevel,
   DeliveryMode,
   UserSession,
+  SupportedLanguage,
 } from './types';
 import { ArabiPromptEngine, generateMetaPrompt } from './utils/ArabiPromptEngine';
+import { getInitialAppLanguage, saveAppLanguage } from './utils/translations';
 import { CheckCircle2 } from 'lucide-react';
 
 const STORE_KEY = 'dawai-free-v1';
@@ -35,7 +37,13 @@ interface SavedSession {
 }
 
 export default function App() {
-  const [lang, setLang] = useState<'ar' | 'en' | 'fr'>('ar');
+  const [lang, setLang] = useState<SupportedLanguage>(() => getInitialAppLanguage());
+
+  const handleLanguageChange = (newLang: SupportedLanguage) => {
+    setLang(newLang);
+    saveAppLanguage(newLang);
+  };
+
   const [currentModel, setCurrentModel] = useState<TargetModel>('gemini-flash-lite');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
@@ -119,9 +127,9 @@ export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
-    document.documentElement.dir = ['ar', 'darija'].includes(outputLanguage) || lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = ['ar', 'darija'].includes(outputLanguage) ? 'ar' : outputLanguage;
-  }, [lang, outputLanguage]);
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const saveSessionsToStorage = (updatedSessions: SavedSession[]) => {
     setSessions(updatedSessions);
@@ -184,11 +192,8 @@ export default function App() {
     }, 450);
   };
 
-  const handleSelectCategoryFromDrawer = (cat: PromptCategory, sampleText?: string) => {
+  const handleSelectCategoryFromDrawer = (cat: PromptCategory) => {
     setSelectedCategory(cat);
-    if (sampleText) {
-      handleGeneratePrompt(sampleText, cat, outputLanguage, executionType);
-    }
   };
 
   const handleSelectHistorySession = (session: SavedSession) => {
@@ -243,7 +248,7 @@ export default function App() {
         onOpenDrawer={() => setIsSidebarOpen(true)}
         onNewChat={handleNewChat}
         lang={lang}
-        setLang={(newLang) => setLang(newLang)}
+        setLang={handleLanguageChange}
         userSession={userSession}
         onSignOut={handleSignOut}
         onSignIn={handleSignIn}
@@ -301,6 +306,7 @@ export default function App() {
         onClearHistory={handleClearHistory}
         sessions={sessions}
         lang={lang}
+        setLang={handleLanguageChange}
         userSession={userSession}
         onSignOut={handleSignOut}
         onSignIn={handleSignIn}

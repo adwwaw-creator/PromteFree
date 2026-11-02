@@ -38,6 +38,18 @@ export type PromptCategory =
 
 export type OutputLanguage = 'ar' | 'darija' | 'en' | 'fr';
 
+export type SupportedLanguage = 'ar' | 'en' | 'fr' | 'es' | 'de' | 'tr' | 'ja' | 'zh' | 'hi';
+export type AppLanguage = SupportedLanguage;
+
+export interface LanguageItem {
+  code: SupportedLanguage;
+  name: string;
+  nativeName: string;
+  flag: string;
+  dir: 'rtl' | 'ltr';
+  locale: string;
+}
+
 export type ExecutionType = DeliveryMode | 'prompt';
 
 export interface PromptOptions {

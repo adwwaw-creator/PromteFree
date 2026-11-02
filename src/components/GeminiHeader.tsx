@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Check, Globe, LogOut, User, UserPlus, X, Shield, ExternalLink, Sparkles, CheckCircle2 } from 'lucide-react';
-import { TargetModel, UserSession } from '../types';
+import { TargetModel, UserSession, SupportedLanguage } from '../types';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { t } from '../utils/translations';
 
 interface GeminiHeaderProps {
   currentModel: TargetModel;
   onSelectModel: (model: TargetModel) => void;
   onOpenDrawer: () => void;
   onNewChat: () => void;
-  lang: 'ar' | 'en' | 'fr';
-  setLang: (lang: 'ar' | 'en' | 'fr') => void;
+  lang: SupportedLanguage;
+  setLang: (lang: SupportedLanguage) => void;
   userSession?: UserSession;
   onSignOut?: () => void;
   onSignIn?: () => void;
@@ -285,13 +287,13 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
   });
 
   return (
-    <header className="sticky top-0 z-40 relative w-full bg-[#000000] text-slate-100 px-3 sm:px-5 h-14 flex items-center justify-between select-none border-b border-white/5" dir="ltr">
+    <header className="sticky top-0 z-40 relative w-full bg-[#000000]/95 backdrop-blur-md text-slate-100 px-3 sm:px-5 h-16 flex items-center justify-between select-none border-b border-white/5" dir="ltr">
       
-      {/* Left side: Hamburger menu icon '=' and Model Name right next to it */}
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+      {/* Left side: Hamburger menu + Google G + ArabiPrompt AI Studio */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button
           onClick={onOpenDrawer}
-          className="w-10 h-10 rounded-full flex flex-col items-center justify-center gap-1.5 text-slate-200 hover:text-white hover:bg-[#1f2022] active:bg-[#282a2c] transition-colors focus:outline-none"
+          className="w-10 h-10 rounded-full flex flex-col items-center justify-center gap-1.5 text-slate-200 hover:text-white hover:bg-white/10 active:scale-95 transition-all focus:outline-none cursor-pointer"
           title="Menu"
           aria-label="Menu"
         >
@@ -299,25 +301,33 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
           <span className="w-5 h-[2px] bg-white rounded-full" />
         </button>
 
-        {/* Model Selector Dropdown - Next to the Menu icon as shown in screenshot */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => {
-              setModelDropdownOpen(!modelDropdownOpen);
-              setUserMenuOpen(false);
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-[#1f2022] active:bg-[#282a2c] text-white text-base sm:text-lg font-medium transition-colors focus:outline-none"
-          >
-            <span className="text-sm shrink-0">{currentModelData.icon}</span>
-            <span className="tracking-tight text-white font-normal truncate max-w-[100px] sm:max-w-[160px] md:max-w-none">{currentModelData.name}</span>
-            {modelDropdownOpen ? (
-              <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
-            )}
-          </button>
+        {/* Brand Logo & Title matching screenshot */}
+        <div 
+          onClick={onNewChat}
+          className="flex items-center gap-2.5 cursor-pointer group"
+          title="ArabiPrompt AI Studio - Accueil"
+        >
+          {/* Google G Logo in 4 colors */}
+          <svg className="w-6 h-6 sm:w-7 sm:h-7 shrink-0 transition-transform group-hover:scale-105" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
 
-          {/* Model Selection Dropdown Popup with Backdrop */}
+          <div className="flex flex-col text-start leading-tight">
+            <div className="text-sm sm:text-base font-bold tracking-tight">
+              <span className="text-white">ArabiPrompt </span>
+              <span className="text-[#38bdf8]">AI Studio</span>
+            </div>
+            <span className="text-[10px] sm:text-[11px] text-slate-300 font-arabic tracking-normal">
+              مصمم البرومات العربي
+            </span>
+          </div>
+        </div>
+
+        {/* Model Selector Trigger inside the left cluster */}
+        <div className="relative" ref={dropdownRef}>
           {modelDropdownOpen && (
             <>
               <div
@@ -465,68 +475,45 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
         </div>
       </div>
 
-      {/* Right side: Language switch + New Chat (pencil with sparkle/dashed ring) + Google User Profile Avatar */}
+      {/* Right side: Language Switcher + Daw Ai 👑 Pill Badge + Green 'D' Avatar */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0" ref={userMenuRef}>
         
-        {/* Language switch */}
+        {/* Responsive Language Switcher */}
+        <LanguageSwitcher
+          currentLang={lang}
+          onChangeLanguage={(newLang) => setLang(newLang)}
+        />
+
+        {/* Daw Ai 👑 Pill Badge - Clicking opens model selector */}
         <button
+          type="button"
           onClick={() => {
-            const next = lang === 'fr' ? 'ar' : lang === 'ar' ? 'en' : 'fr';
-            setLang(next);
+            setModelDropdownOpen(!modelDropdownOpen);
+            setUserMenuOpen(false);
           }}
-          className="text-xs font-medium text-slate-400 hover:text-white px-2 py-1 rounded-full hover:bg-[#1f2022] transition-colors flex items-center gap-1 shrink-0"
-          title="Changer de langue / تغيير اللغة"
+          className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-gradient-to-r from-[#4f46e5]/90 via-[#6366f1]/80 to-[#7c3aed]/90 hover:from-[#4338ca] hover:to-[#6d28d9] border border-indigo-400/50 text-white text-xs sm:text-sm font-semibold shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all active:scale-95 cursor-pointer"
+          title={`Daw Ai (${currentModelData.name}) - Changer de modèle`}
         >
-          <Globe className="w-3.5 h-3.5 text-slate-400" />
-          <span className="uppercase text-[11px] font-semibold">{lang}</span>
-        </button>
-
-        {/* New Chat Edit Icon with Dashed Ring */}
-        <button
-          onClick={onNewChat}
-          className="w-8 h-8 rounded-full border border-dashed border-slate-400 hover:border-slate-200 flex items-center justify-center text-slate-300 hover:text-white hover:bg-[#1f2022] transition-all shrink-0 active:scale-95"
-          title={lang === 'ar' ? 'محادثة جديدة' : 'Nouvelle discussion'}
-        >
-          <svg className="w-4 h-4 text-slate-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          <svg className="w-3.5 h-3.5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
+          <span className="tracking-tight">Daw Ai</span>
+          <span className="text-xs">👑</span>
         </button>
 
-        {/* User Profile Avatar / Sign In Button */}
-        {isLoggedIn ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setUserMenuOpen((prev) => !prev);
-              setModelDropdownOpen(false);
-            }}
-            className="w-8 h-8 rounded-full overflow-hidden border border-[#5f6368] hover:border-[#7cacf8] hover:ring-2 hover:ring-[#7cacf8]/40 transition-all shrink-0 flex items-center justify-center bg-[#282a2c] active:scale-95 focus:outline-none cursor-pointer"
-            title={lang === 'ar' ? `حساب Google: ${userName}` : `Compte Google: ${userName}`}
-            aria-label="Google Account"
-          >
-            <img
-              src={userAvatar}
-              alt={userName}
-              className="w-full h-full object-cover rounded-full"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = './assets/user_avatar.png';
-              }}
-            />
-          </button>
-        ) : (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setUserMenuOpen((prev) => !prev);
-              setModelDropdownOpen(false);
-            }}
-            className="px-2.5 py-1 text-xs font-medium rounded-full bg-[#1a73e8] hover:bg-[#1b66ca] text-white flex items-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-sm"
-          >
-            <User className="w-3.5 h-3.5" />
-            <span>{lang === 'ar' ? 'تسجيل الدخول' : lang === 'fr' ? 'Connexion' : 'Sign In'}</span>
-          </button>
-        )}
+        {/* User Profile Green Circle 'D' Avatar matching screenshot */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setUserMenuOpen((prev) => !prev);
+            setModelDropdownOpen(false);
+          }}
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#1e7e34] hover:bg-[#28a745] border border-[#28a745]/60 text-white font-bold text-sm sm:text-base flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
+          title={`Compte Daw (${userEmail})`}
+          aria-label="Daw Account"
+        >
+          D
+        </button>
 
         {/* Google Account Profile Modal / Dropdown */}
         {userMenuOpen && (

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { X, Search, Copy, Check, Download, ExternalLink, Sparkles, BookOpen, Filter, ArrowUpRight, Scale } from 'lucide-react';
 import { promptLibrary, LibraryPromptItem } from '../data/promptLibrary';
+import { SupportedLanguage } from '../types';
 
 interface PromptLibraryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectPrompt: (promptText: string) => void;
   onOpenRules?: () => void;
-  lang: 'ar' | 'en' | 'fr';
+  lang: SupportedLanguage;
 }
 
 export const PromptLibraryModal: React.FC<PromptLibraryModalProps> = ({

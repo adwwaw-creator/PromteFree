@@ -219,20 +219,8 @@ export function useSpeechRecognition({ onTranscriptChange, lang = 'ar-SA' }: Use
             console.warn('AudioContext level visualization setup skipped:', audioErr);
           }
         } catch (mediaErr: any) {
-          console.warn('Microphone permission request result:', mediaErr);
-          if (
-            mediaErr?.name === 'NotAllowedError' ||
-            mediaErr?.name === 'PermissionDeniedError' ||
-            mediaErr?.message?.toLowerCase().includes('denied') ||
-            mediaErr?.message?.toLowerCase().includes('permission')
-          ) {
-            setPermissionState('denied');
-            setErrorMessage('permission-denied');
-            setIsListening(false);
-            cleanupAudio();
-            return;
-          }
-          // For other device errors (e.g. NotFoundError), still attempt SpeechRecognition
+          console.debug('MediaStream analyser optional setup skipped:', mediaErr);
+          // Do not block SpeechRecognition from starting; SpeechRecognition manages microphone permissions directly
         }
       }
 

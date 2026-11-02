@@ -62,8 +62,8 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
   const [activeTab, setActiveTab] = useState<'chat' | 'task'>('chat');
   const [showAllLaunchers, setShowAllLaunchers] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const homeInputRef = useRef<HTMLInputElement>(null);
-  const chatInputRef = useRef<HTMLInputElement>(null);
+  const homeInputRef = useRef<HTMLTextAreaElement>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Dynamic context placeholder based on selected category & speech state
   const getCategoryPlaceholder = () => {
@@ -120,6 +120,13 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
       const base = baseInputRef.current.trim();
       const updated = base ? `${base} ${spokenText.trim()}` : spokenText.trim();
       setInputValue(updated);
+      requestAnimationFrame(() => {
+        const activeEl = messages.length > 0 ? chatInputRef.current : homeInputRef.current;
+        if (activeEl) {
+          activeEl.style.height = 'auto';
+          activeEl.style.height = `${Math.min(activeEl.scrollHeight, 120)}px`;
+        }
+      });
     },
   });
 
@@ -300,12 +307,39 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
     window.open(targetUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle keyboard: Enter inserts a newline and goes down below the text; Ctrl/Cmd+Enter submits
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Ctrl+Enter or Cmd+Enter allows quick submission from keyboard if desired
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'Enter' || e.keyCode === 13)) {
+      e.preventDefault();
+      if (isListening) {
+        stopListening();
+      }
+      handleFormSubmit(e);
+      return;
+    }
+
+    // Regular Enter: allows default newline behavior (ينزل تحت الكتابة)
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      requestAnimationFrame(() => {
+        const target = e.currentTarget;
+        if (target) {
+          target.style.height = 'auto';
+          target.style.height = `${Math.min(target.scrollHeight, 160)}px`;
+        }
+      });
+    }
+  };
+
+  const handleFormSubmit = (e?: React.FormEvent | React.KeyboardEvent) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
     if (isListening) {
       stopListening();
     }
-    if (!inputValue.trim()) {
+    const textToSend = (inputValue.trim() || interimText.trim());
+    if (!textToSend) {
       if (messages.length === 0 && homeInputRef.current) {
         homeInputRef.current.focus();
       } else {
@@ -315,9 +349,12 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
       return;
     }
     if (isLoading) return;
-    onSendMessage(inputValue.trim(), selectedCategory, outputLanguage, executionType);
+    onSendMessage(textToSend, selectedCategory, outputLanguage, executionType);
     setInputValue('');
     baseInputRef.current = '';
+
+    if (homeInputRef.current) homeInputRef.current.style.height = 'auto';
+    if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
   };
 
   // Global Keyboard Shortcuts: Cmd/Ctrl + K to focus input area, Escape to clear prompt
@@ -576,20 +613,26 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                   <Plus className="w-5 h-5 text-slate-200" />
                 </button>
 
-                {/* Text input for idea / prompt */}
-                <div className="flex-1 min-w-0">
-                  <input
+                {/* Textarea for idea / prompt */}
+                <div className="flex-1 min-w-0 flex items-center">
+                  <textarea
                     ref={homeInputRef}
-                    type="text"
+                    rows={1}
+                    enterKeyHint="enter"
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={(e) => {
+                      setInputValue(e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
+                    }}
+                    onKeyDown={handleInputKeyDown}
                     dir="auto"
                     placeholder={
                       isListening
                         ? (lang === 'ar' ? '🎙️ جارٍ الاستماع... تكلّم بفكرتك الآن...' : lang === 'fr' ? '🎙️ Écoute en cours... Parlez maintenant...' : '🎙️ Listening... Speak your prompt idea now...')
                         : getCategoryPlaceholder()
                     }
-                    className="w-full bg-transparent text-sm sm:text-base text-white placeholder-slate-400 focus:outline-none px-2 py-1 leading-normal"
+                    className="w-full bg-transparent text-sm sm:text-base text-white placeholder-slate-400 focus:outline-none px-2 py-1 leading-normal resize-none overflow-y-auto max-h-36 scrollbar-none"
                   />
                 </div>
 
@@ -616,12 +659,17 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  onClick={() => {
-                    if (isListening) stopListening();
+                  onClick={(e) => {
+                    if (!inputValue.trim() && !isListening) {
+                      e.preventDefault();
+                      handleToggleVoice();
+                    } else if (isListening) {
+                      stopListening();
+                    }
                   }}
                   className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-[#2563eb] via-[#3b82f6] to-[#60a5fa] shadow-[0_0_20px_rgba(59,130,246,0.85)] hover:shadow-[0_0_25px_rgba(59,130,246,1)] hover:scale-105 active:scale-95 text-white flex items-center justify-center transition-all shrink-0 cursor-pointer"
-                  title={lang === 'ar' ? 'توليد البرومت' : 'Générer le prompt'}
-                  aria-label="Submit Prompt"
+                  title={inputValue.trim() ? (lang === 'ar' ? 'توليد البرومت' : 'Générer le prompt') : (lang === 'ar' ? 'بدء الإملاء الصوتي' : 'Dictée vocale')}
+                  aria-label="Voice input or submit prompt"
                 >
                   <AudioWaveform className="w-5 h-5 text-white" />
                 </button>
@@ -1346,20 +1394,26 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
               <Plus className="w-5 h-5 text-slate-200" />
             </button>
 
-            {/* Input area */}
+            {/* Text area for chat composer */}
             <div className="flex-1 min-w-0 flex items-center gap-1 relative">
-              <input
+              <textarea
                 ref={chatInputRef}
-                type="text"
+                rows={1}
+                enterKeyHint="enter"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
+                }}
+                onKeyDown={handleInputKeyDown}
                 dir="auto"
                 placeholder={
                   isListening
                     ? (lang === 'ar' ? '🎙️ جارٍ الاستماع... تكلّم الآن...' : lang === 'fr' ? '🎙️ Écoute en cours... Parlez...' : '🎙️ Listening... Speak now...')
                     : 'Demandez ...'
                 }
-                className="w-full bg-transparent text-sm sm:text-base text-white placeholder-slate-400 focus:outline-none px-2 py-1 leading-normal"
+                className="w-full bg-transparent text-sm sm:text-base text-white placeholder-slate-400 focus:outline-none px-2 py-1 leading-normal resize-none overflow-y-auto max-h-36 scrollbar-none"
               />
 
               {inputValue && !isListening && (

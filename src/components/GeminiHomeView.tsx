@@ -31,6 +31,11 @@ interface GeminiHomeViewProps {
   tone?: string;
   setTone?: (t: string) => void;
   onOpenStyleTransfer?: () => void;
+  onOpenVisitorAnalytics?: () => void;
+  visitorFlag?: string;
+  onlineVisitorsCount?: number;
+  totalVisitors?: number;
+  visitorCountry?: string;
 }
 
 export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
@@ -55,6 +60,11 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
   tone = 'رسمي واحترافي',
   setTone,
   onOpenStyleTransfer,
+  onOpenVisitorAnalytics,
+  visitorFlag,
+  onlineVisitorsCount,
+  totalVisitors,
+  visitorCountry,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -837,20 +847,45 @@ export const GeminiHomeView: React.FC<GeminiHomeViewProps> = ({
                 <div className="absolute top-7 left-1/2 w-2.5 h-2.5 bg-amber-300 rounded-full blur-[1px] opacity-90" />
               </div>
 
-              {/* Centered Link Badge matching screenshot */}
-              <a
-                href="https://arabiprompt.ai.studio/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative z-20 flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0a1224]/85 hover:bg-[#0f1d38] border border-cyan-400/50 hover:border-cyan-400 text-white text-xs sm:text-sm font-medium shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all active:scale-95 cursor-pointer backdrop-blur-md mb-2 group"
-                title="ArabiPrompt Official Website"
-              >
-                <svg className="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                </svg>
-                <span className="tracking-wide text-slate-100 group-hover:text-white font-medium">arabiprompt.ai.studio</span>
-              </a>
+              {/* Centered Badges: Live Visitors Counter + Official Link */}
+              <div className="relative z-20 flex items-center justify-center gap-2 flex-wrap mb-2 px-2">
+                {onOpenVisitorAnalytics && (
+                  <button
+                    type="button"
+                    onClick={onOpenVisitorAnalytics}
+                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a1224]/85 hover:bg-[#0f1d38] border border-emerald-500/40 hover:border-emerald-400 text-white text-xs sm:text-sm font-medium shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all active:scale-95 cursor-pointer backdrop-blur-md group"
+                    title={lang === 'ar' ? 'عرض عداد الزوار والتوزيع الجغرافي الفعلي' : 'Voir les statistiques réelles des visiteurs'}
+                  >
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                    <span className="font-mono text-emerald-300 font-bold">{totalVisitors ?? 0}</span>
+                    <span className="text-slate-300">{lang === 'ar' ? 'زيارة' : 'visites'}</span>
+                    <span className="text-slate-500">•</span>
+                    <span className="font-mono text-cyan-300 font-semibold">{onlineVisitorsCount ?? 0} {lang === 'ar' ? 'متصل' : 'en ligne'}</span>
+                    <span className="text-slate-400">•</span>
+                    <span className="flex items-center gap-1 text-slate-200">
+                      <span>{visitorFlag || '🌍'}</span>
+                      <span className="hidden sm:inline text-xs">{visitorCountry}</span>
+                    </span>
+                  </button>
+                )}
+
+                <a
+                  href="https://arabiprompt.ai.studio/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0a1224]/85 hover:bg-[#0f1d38] border border-cyan-400/50 hover:border-cyan-400 text-white text-xs sm:text-sm font-medium shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all active:scale-95 cursor-pointer backdrop-blur-md group"
+                  title="ArabiPrompt Official Website"
+                >
+                  <svg className="w-4 h-4 text-cyan-400 group-hover:rotate-12 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                  <span className="tracking-wide text-slate-100 group-hover:text-white font-medium">arabiprompt.ai.studio</span>
+                </a>
+              </div>
             </div>
 
           </div>

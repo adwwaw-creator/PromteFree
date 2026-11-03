@@ -14,6 +14,11 @@ interface GeminiHeaderProps {
   userSession?: UserSession;
   onSignOut?: () => void;
   onSignIn?: () => void;
+  onOpenVisitorAnalytics?: () => void;
+  visitorFlag?: string;
+  onlineVisitorsCount?: number;
+  totalVisitors?: number;
+  visitorCountry?: string;
 }
 
 export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
@@ -31,6 +36,11 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
   },
   onSignOut,
   onSignIn,
+  onOpenVisitorAnalytics,
+  visitorFlag,
+  onlineVisitorsCount,
+  totalVisitors,
+  visitorCountry,
 }) => {
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -478,6 +488,34 @@ export const GeminiHeader: React.FC<GeminiHeaderProps> = ({
       {/* Right side: Language Switcher + Daw Ai 👑 Pill Badge + Green 'D' Avatar */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0" ref={userMenuRef}>
         
+        {/* Live Visitor Counter & Geolocation Badge */}
+        {onOpenVisitorAnalytics && (
+          <button
+            type="button"
+            onClick={onOpenVisitorAnalytics}
+            className="flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 rounded-full bg-[#11192e]/90 hover:bg-[#1a2646] border border-cyan-500/40 hover:border-cyan-400 text-xs text-slate-200 transition-all shadow-[0_0_12px_rgba(6,182,212,0.25)] active:scale-95 cursor-pointer shrink-0"
+            title={
+              lang === 'ar'
+                ? `إجمالي الزيارات الفعلية: ${totalVisitors ?? 0} | المتصلون: ${onlineVisitorsCount ?? 0} | انقر لعرض إحصائيات الدول`
+                : lang === 'fr'
+                ? `Visites réelles: ${totalVisitors ?? 0} | En direct: ${onlineVisitorsCount ?? 0} | Statistiques des pays`
+                : `Real visits: ${totalVisitors ?? 0} | Online: ${onlineVisitorsCount ?? 0} | Global stats`
+            }
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span className="text-sm">{visitorFlag || '🌍'}</span>
+            <span className="font-mono font-bold text-cyan-300 text-[11px] sm:text-xs">
+              {totalVisitors ?? 0}
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+              ({onlineVisitorsCount ?? 0})
+            </span>
+          </button>
+        )}
+
         {/* Responsive Language Switcher */}
         <LanguageSwitcher
           currentLang={lang}

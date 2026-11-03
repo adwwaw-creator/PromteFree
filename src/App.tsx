@@ -5,6 +5,9 @@ import { GeminiBottomSheet } from './components/GeminiBottomSheet';
 import { GeminiSidebar } from './components/GeminiSidebar';
 import { PromptLibraryModal } from './components/PromptLibraryModal';
 import { PromptRulesModal } from './components/PromptRulesModal';
+import { VisitorAnalyticsModal } from './components/VisitorAnalyticsModal';
+import { VisitorTracker } from './components/VisitorTracker';
+import { useVisitorAnalytics } from './hooks/useVisitorAnalytics';
 import {
   TargetModel,
   ChatMessage,
@@ -49,7 +52,21 @@ export default function App() {
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [isVisitorModalOpen, setIsVisitorModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 100% Real Visitor Counter & Global Locations Analytics (Starts from 0)
+  const {
+    visitorLocation,
+    isLoadingLocation,
+    totalVisitors,
+    uniqueVisitors,
+    onlineNow,
+    topCountries,
+    ownerExcluded,
+    toggleOwnerExclusion,
+    resetCounter,
+  } = useVisitorAnalytics();
   
   // User Session Management
   const [userSession, setUserSession] = useState<UserSession>(() => {
@@ -240,6 +257,8 @@ export default function App() {
 
   return (
     <div className="w-full min-h-screen bg-[#000000] bg-[radial-gradient(ellipse_80%_80%_at_50%_100%,rgba(10,24,60,0.65),rgba(0,0,0,1))] text-[#f5f6fc] flex flex-col font-sans selection:bg-[#647de8] selection:text-white m-0 p-0 overflow-x-hidden">
+      {/* Real Visitor Tracker (records real visits and unique visitor UUIDs) */}
+      <VisitorTracker />
       
       {/* Top Header */}
       <GeminiHeader
@@ -252,6 +271,11 @@ export default function App() {
         userSession={userSession}
         onSignOut={handleSignOut}
         onSignIn={handleSignIn}
+        onOpenVisitorAnalytics={() => setIsVisitorModalOpen(true)}
+        visitorFlag={visitorLocation.flag}
+        onlineVisitorsCount={onlineNow}
+        totalVisitors={totalVisitors}
+        visitorCountry={visitorLocation.country}
       />
 
       {/* Main Home & Prompt Stream View */}
@@ -277,6 +301,11 @@ export default function App() {
           setDeliveryMode={setDeliveryMode}
           tone={tone}
           setTone={setTone}
+          onOpenVisitorAnalytics={() => setIsVisitorModalOpen(true)}
+          visitorFlag={visitorLocation.flag}
+          onlineVisitorsCount={onlineNow}
+          totalVisitors={totalVisitors}
+          visitorCountry={visitorLocation.country}
         />
       </main>
 
@@ -310,6 +339,11 @@ export default function App() {
         userSession={userSession}
         onSignOut={handleSignOut}
         onSignIn={handleSignIn}
+        onOpenVisitorAnalytics={() => setIsVisitorModalOpen(true)}
+        visitorLocation={visitorLocation}
+        totalVisitors={totalVisitors}
+        onlineNow={onlineNow}
+        onResetToZero={resetCounter}
       />
 
       {/* Modal for Prompt Library extracted from attached PDF files */}
@@ -331,6 +365,21 @@ export default function App() {
           handleGeneratePrompt(template, selectedCategory, outputLanguage, executionType);
         }}
         lang={lang}
+      />
+
+      {/* Live Visitor Analytics & Geographic Locations Modal */}
+      <VisitorAnalyticsModal
+        isOpen={isVisitorModalOpen}
+        onClose={() => setIsVisitorModalOpen(false)}
+        lang={lang}
+        totalVisitors={totalVisitors}
+        onlineNow={onlineNow}
+        visitorLocation={visitorLocation}
+        isLoadingLocation={isLoadingLocation}
+        topCountries={topCountries}
+        ownerExcluded={ownerExcluded}
+        onToggleOwnerExclusion={toggleOwnerExclusion}
+        onResetToZero={resetCounter}
       />
 
       {/* Global Floating Action Feedback Toast */}

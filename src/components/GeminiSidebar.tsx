@@ -19,10 +19,15 @@ import {
   User,
   LogIn,
   Globe,
+  MapPin,
+  Activity,
+  Users,
+  RotateCcw,
 } from 'lucide-react';
 import { PromptCategory, UserSession, SupportedLanguage } from '../types';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { t } from '../utils/translations';
+import { VisitorLocation } from '../hooks/useVisitorAnalytics';
 
 interface SavedSession {
   id: string;
@@ -45,6 +50,11 @@ interface GeminiSidebarProps {
   userSession?: UserSession;
   onSignOut?: () => void;
   onSignIn?: () => void;
+  onOpenVisitorAnalytics?: () => void;
+  visitorLocation?: VisitorLocation;
+  totalVisitors?: number;
+  onlineNow?: number;
+  onResetToZero?: () => void;
 }
 
 export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
@@ -67,6 +77,11 @@ export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
   },
   onSignOut,
   onSignIn,
+  onOpenVisitorAnalytics,
+  visitorLocation,
+  totalVisitors,
+  onlineNow,
+  onResetToZero,
 }) => {
   const [filterQuery, setFilterQuery] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -310,6 +325,70 @@ export const GeminiSidebar: React.FC<GeminiSidebarProps> = ({
             />
           </div>
         )}
+
+        {/* Visitor Counter & Geolocation Card in Drawer */}
+        <div className="mx-3 my-2 p-3 rounded-2xl bg-gradient-to-br from-[#121829] to-[#151c33] border border-cyan-500/30 shadow-md">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-cyan-300 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5" />
+              {lang === 'ar' ? 'عداد الزوار الفعلي' : lang === 'fr' ? 'Compteur Réel' : 'Real Visitors Counter'}
+            </span>
+            <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-semibold bg-emerald-500/20 px-1.5 py-0.2 rounded-full border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              {onlineNow ?? 0} {lang === 'ar' ? 'نشط الآن' : 'online'}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-xs py-1 px-2 rounded-xl bg-black/40 border border-[#222b44] mb-2 font-mono">
+            <span className="text-slate-400 text-[11px]">{lang === 'ar' ? 'إجمالي الزيارات:' : 'Total visits:'}</span>
+            <span className="font-bold text-white tracking-wide">{(totalVisitors ?? 0).toLocaleString()}</span>
+          </div>
+
+          {visitorLocation && (
+            <div className="flex items-center justify-between text-xs text-slate-300 mb-2.5">
+              <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-cyan-400" />
+                {lang === 'ar' ? 'موقعك:' : 'Votre pays:'}
+              </span>
+              <span className="font-semibold text-white flex items-center gap-1 text-[11px]">
+                <span>{visitorLocation.flag}</span>
+                <span className="truncate max-w-[130px]">{visitorLocation.country}</span>
+              </span>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1.5">
+            {onOpenVisitorAnalytics && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenVisitorAnalytics();
+                  onClose();
+                }}
+                className="w-full py-1.5 px-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>{lang === 'ar' ? 'عرض التوزيع الجغرافي للدول' : 'Voir la carte des pays'}</span>
+              </button>
+            )}
+
+            {onResetToZero && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm(lang === 'ar' ? 'هل تريد تصفير عداد الزوار والبدء من الصفر؟' : 'Remettre le compteur à zéro ?')) {
+                    onResetToZero();
+                  }
+                }}
+                className="w-full py-1 px-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer"
+                title={lang === 'ar' ? 'إعادة الحساب من الصفر' : 'Remettre à 0'}
+              >
+                <RotateCcw className="w-3 h-3 text-rose-400" />
+                <span>{lang === 'ar' ? 'إعادة الحساب من الصفر' : 'Remise à zéro'}</span>
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Bottom Profile & Authentication Section */}
         <div className="p-3.5 bg-[#0e1012] border-t border-[#1e1f20] flex flex-col gap-2">

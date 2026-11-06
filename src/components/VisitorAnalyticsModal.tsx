@@ -12,6 +12,7 @@ import {
   BarChart3,
   RotateCcw,
   AlertTriangle,
+  Plus,
 } from 'lucide-react';
 import { SupportedLanguage } from '../types';
 import { VisitorLocation, CountryStat } from '../hooks/useVisitorAnalytics';
@@ -28,6 +29,7 @@ interface VisitorAnalyticsModalProps {
   topCountries: CountryStat[];
   ownerExcluded?: boolean;
   onToggleOwnerExclusion?: (exclude: boolean) => void;
+  onRecordVisitManual?: () => void;
   onResetToZero: () => void;
 }
 
@@ -42,6 +44,7 @@ export const VisitorAnalyticsModal: React.FC<VisitorAnalyticsModalProps> = ({
   topCountries,
   ownerExcluded,
   onToggleOwnerExclusion,
+  onRecordVisitManual,
   onResetToZero,
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'admin'>('overview');
@@ -123,16 +126,31 @@ export const VisitorAnalyticsModal: React.FC<VisitorAnalyticsModalProps> = ({
             </button>
           </div>
 
-          {/* Reset to Zero Button */}
-          <button
-            type="button"
-            onClick={() => setShowConfirmReset(true)}
-            className="flex items-center gap-1.5 px-3 py-1 mb-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
-            title={lang === 'ar' ? 'إعادة ضبط العداد والبدء من الصفر' : 'Remettre à 0'}
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-            <span>{lang === 'ar' ? 'إعادة الحساب من الصفر' : 'Remise à 0'}</span>
-          </button>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            {/* Quick Test Visit Button */}
+            {onRecordVisitManual && (
+              <button
+                type="button"
+                onClick={onRecordVisitManual}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
+                title={lang === 'ar' ? 'تسجيل زيارة وتحديث العداد فوراً' : 'Enregistrer une visite (+1)'}
+              >
+                <Plus className="w-3.5 h-3.5 text-cyan-400" />
+                <span>{lang === 'ar' ? '+1 تجربة زيارة' : '+1 Visite'}</span>
+              </button>
+            )}
+
+            {/* Reset to Zero Button */}
+            <button
+              type="button"
+              onClick={() => setShowConfirmReset(true)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
+              title={lang === 'ar' ? 'إعادة ضبط العداد والبدء من الصفر' : 'Remettre à 0'}
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+              <span>{lang === 'ar' ? 'إعادة الحساب من الصفر' : 'Remise à 0'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Reset Confirmation Banner */}

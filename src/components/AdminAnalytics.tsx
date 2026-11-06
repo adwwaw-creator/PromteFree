@@ -6,6 +6,7 @@ import {
   saveCustomWorkerUrl,
   getOrCreateVisitorId,
   resetAnalyticsToZero,
+  recordRealVisit,
   isOwnerExcluded,
   setOwnerExcluded,
   purgeOwnerVisits,
@@ -22,6 +23,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ShieldCheck,
+  Plus,
 } from 'lucide-react';
 
 interface AdminAnalyticsProps {
@@ -115,6 +117,20 @@ export function AdminAnalytics({
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+          {/* Quick Test Visit Button */}
+          <button
+            type="button"
+            onClick={async () => {
+              await recordRealVisit();
+              loadData(days);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-semibold transition-all active:scale-95 cursor-pointer shadow-sm"
+            title={lang === 'ar' ? 'تسجيل زيارة وتحديث العداد فوراً' : 'Enregistrer une visite (+1)'}
+          >
+            <Plus className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{lang === 'ar' ? '+1 تجربة زيارة' : '+1 Visite'}</span>
+          </button>
+
           {/* Reset to Zero Button */}
           <button
             type="button"

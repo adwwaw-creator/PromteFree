@@ -66,6 +66,7 @@ export default function App() {
     ownerExcluded,
     toggleOwnerExclusion,
     resetCounter,
+    recordVisitManual,
   } = useVisitorAnalytics();
   
   // User Session Management
@@ -379,6 +380,7 @@ export default function App() {
         topCountries={topCountries}
         ownerExcluded={ownerExcluded}
         onToggleOwnerExclusion={toggleOwnerExclusion}
+        onRecordVisitManual={recordVisitManual}
         onResetToZero={resetCounter}
       />
 

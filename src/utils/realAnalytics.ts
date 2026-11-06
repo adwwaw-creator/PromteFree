@@ -116,21 +116,16 @@ export function isCurrentSessionOwner(): boolean {
       }
     }
   } catch {}
-  // Default session in this applet is the owner Adwaw (dawrachid4@gmail.com)
-  return true;
+  return false;
 }
 
-// Check if owner's own visits should be excluded from visitor counter (defaults to true)
+// Check if owner's own visits should be excluded from visitor counter (defaults to false so counter works unless user toggles exclusion)
 export function isOwnerExcluded(): boolean {
   try {
     const val = localStorage.getItem(EXCLUDE_OWNER_KEY);
-    if (val !== null) {
-      return val === 'true';
-    }
-    // Default: strictly true, do not count owner visits
-    return true;
+    return val === 'true';
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -197,14 +192,9 @@ export function resetAnalyticsToZero(): void {
 }
 
 // Record an actual real page visit
-export async function recordRealVisit(): Promise<void> {
-  if (typeof navigator !== 'undefined' && navigator.doNotTrack === '1') {
-    return;
-  }
-
-  // Do not count the owner's visit if owner exclusion is enabled
+export async function recordRealVisit(forceCountryCode?: string, forceCity?: string): Promise<void> {
+  // Check if owner explicitly requested exclusion
   if (isCurrentSessionOwner() && isOwnerExcluded()) {
-    purgeOwnerVisits();
     return;
   }
 
@@ -224,35 +214,31 @@ export async function recordRealVisit(): Promise<void> {
     } catch {}
   }
 
-  // Detect real location of current client
-  let countryCode = 'MA';
-  let city = 'الدار البيضاء';
+  // Fast locale detection as fallback:
+  let countryCode = forceCountryCode || 'MA';
+  let city = forceCity || 'الدار البيضاء';
 
   try {
-    const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
-    if (res.ok) {
-      const data = await res.json();
-      if (data.country_code) countryCode = data.country_code.toUpperCase();
-      if (data.city) city = data.city;
-    }
-  } catch {
-    const lang = typeof navigator !== 'undefined' ? navigator.language : '';
-    if (lang.includes('SA')) countryCode = 'SA';
-    else if (lang.includes('EG')) countryCode = 'EG';
-    else if (lang.includes('FR')) countryCode = 'FR';
-    else if (lang.includes('DZ')) countryCode = 'DZ';
-  }
+    const lang = typeof navigator !== 'undefined' ? (navigator.language || '') : '';
+    if (lang.includes('SA') || lang.includes('ar-SA')) { countryCode = 'SA'; city = 'الرياض'; }
+    else if (lang.includes('EG') || lang.includes('ar-EG')) { countryCode = 'EG'; city = 'القاهرة'; }
+    else if (lang.includes('AE') || lang.includes('ar-AE')) { countryCode = 'AE'; city = 'دبي'; }
+    else if (lang.includes('FR') || lang.includes('fr')) { countryCode = 'FR'; city = 'باريس'; }
+    else if (lang.includes('DZ') || lang.includes('ar-DZ')) { countryCode = 'DZ'; city = 'الجزائر'; }
+    else if (lang.includes('MA') || lang.includes('ar-MA')) { countryCode = 'MA'; city = 'الدار البيضاء'; }
+  } catch {}
 
-  // Update verified local database
+  // Update verified local database immediately so counter responds instantly
   try {
     const db = getStoredDb();
 
     // Upsert into daily_stats
     const existingIndex = db.dailyStats.findIndex(
-      (s) => s.day === day && s.country === countryCode && s.city === city
+      (s) => s.day === day && s.country === countryCode
     );
     if (existingIndex >= 0) {
       db.dailyStats[existingIndex].views += 1;
+      if (city) db.dailyStats[existingIndex].city = city;
     } else {
       db.dailyStats.push({ day, country: countryCode, city, views: 1 });
     }
@@ -271,6 +257,31 @@ export async function recordRealVisit(): Promise<void> {
   } catch (err) {
     console.debug('Error updating analytics db:', err);
   }
+
+  // Asynchronously query live geo service to refine country and city if available
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: controller.signal });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      const detectedCode = (data.country_code || '').toUpperCase();
+      const detectedCity = data.city;
+      if (detectedCode && detectedCode !== countryCode) {
+        const db = getStoredDb();
+        const stat = db.dailyStats.find((s) => s.day === day && s.country === countryCode);
+        if (stat) {
+          stat.country = detectedCode;
+          if (detectedCity) stat.city = detectedCity;
+          saveStoredDb(db);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('arabiprompt_analytics_updated'));
+          }
+        }
+      }
+    }
+  } catch {}
 }
 
 // Fetch real aggregated analytics

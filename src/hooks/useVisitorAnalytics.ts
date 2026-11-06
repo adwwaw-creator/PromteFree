@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   getStoredDb,
   resetAnalyticsToZero,
+  recordRealVisit,
   getCountryFlagEmoji,
   getOrCreateVisitorId,
   isCurrentSessionOwner,
@@ -103,8 +104,8 @@ export function useVisitorAnalytics() {
       totalViews,
       uniqueCount,
       countries,
-      // Active online is 0 if empty/reset, or matches unique active visitor count
-      online: uniqueCount > 0 ? uniqueCount : 0,
+      // Active online is at least 1 when views > 0 (current session viewing site), or 0 when reset
+      online: totalViews > 0 ? Math.max(1, uniqueCount) : 0,
     };
   }, []);
 
@@ -113,6 +114,12 @@ export function useVisitorAnalytics() {
   const refreshMetrics = useCallback(() => {
     setMetrics(getRealCounts());
   }, [getRealCounts]);
+
+  // Record a manual or test visit
+  const recordVisitManual = useCallback(async (countryCode?: string, city?: string) => {
+    await recordRealVisit(countryCode, city);
+    refreshMetrics();
+  }, [refreshMetrics]);
 
   // Toggle owner exclusion setting
   const toggleOwnerExclusion = useCallback((exclude: boolean) => {
@@ -193,6 +200,7 @@ export function useVisitorAnalytics() {
     ownerExcluded,
     toggleOwnerExclusion,
     resetCounter,
+    recordVisitManual,
     refreshMetrics,
   };
 }
